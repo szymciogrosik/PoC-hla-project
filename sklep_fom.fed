@@ -29,7 +29,6 @@
   (interactions
     (class InteractionRoot reliable timestamp
       (class RTIprivate reliable timestamp)
-      (class Finish reliable timestamp)
       (class Dolaczenie_klienta_do_kolejki reliable timestamp TestSpace
         (parameter numer_klienta)
 		(parameter numer_kolejki)
