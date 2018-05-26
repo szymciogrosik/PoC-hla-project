@@ -2,14 +2,14 @@ package hla.queue;
 
 import java.util.Comparator;
 
-public class ExternalEventQueue {
+public class QueueExternalEvent {
     public enum EventType {JOIN_CLIENT_TO_QUEUE, OPEN_NEW_CASH_REGISTER}
 
     private  int qty;
     private EventType eventType;
     private Double time;
 
-    public ExternalEventQueue(int qty, EventType eventType, Double time) {
+    public QueueExternalEvent(int qty, EventType eventType, Double time) {
         this.qty = qty;
         this.eventType = eventType;
         this.time = time;
@@ -28,10 +28,9 @@ public class ExternalEventQueue {
         return time;
     }
 
-    static class ExternalEventComparator implements Comparator<ExternalEventQueue> {
-
+    static class ExternalEventComparator implements Comparator<QueueExternalEvent> {
         @Override
-        public int compare(ExternalEventQueue o1, ExternalEventQueue o2) {
+        public int compare(QueueExternalEvent o1, QueueExternalEvent o2) {
             return o1.time.compareTo(o2.time);
         }
     }

@@ -1,54 +1,31 @@
 package hla.queue;
 
 import hla.constants.ConfigConstants;
-import hla.example.producerConsumer.consumer.ConsumerFederate;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
-import org.portico.impl.hla13.types.DoubleTime;
-import org.portico.impl.hla13.types.DoubleTimeInterval;
+import hla.tamplate.Federate;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Random;
-
-public class QueueFederate {
-    private RTIambassador rtiamb;
+public class QueueFederate extends Federate {
     private QueueAmbassador fedamb;
-    private final double timeStep           = 100.0;
     private int queueHlaHandle;
 
-    public void runFederate() throws RTIexception {
+    private int queueNr = 0;
+    private int cashRegisterNr = 0;
+    private int queueLengthNr = 0;
+
+
+    private void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
 
-        try
-        {
-            File fom = new File(ConfigConstants.FEDERATION_FILE_PATH);
-            rtiamb.createFederationExecution( ConfigConstants.FEDERATION_NAME,
-                    fom.toURI().toURL() );
-            log( "Created Federation" );
-        }
-        catch( FederationExecutionAlreadyExists exists )
-        {
-            log( "Didn't create federation, it already existed" );
-        }
-        catch( MalformedURLException urle )
-        {
-            log( "Exception processing fom: " + urle.getMessage() );
-            urle.printStackTrace();
-            return;
-        }
+        tryCreateFederation();
 
         fedamb = new QueueAmbassador();
         rtiamb.joinFederationExecution( ConfigConstants.QUEUE_FED, ConfigConstants.FEDERATION_NAME, fedamb );
         log( "Joined Federation as " + ConfigConstants.QUEUE_FED);
 
         rtiamb.registerFederationSynchronizationPoint( ConfigConstants.READY_TO_RUN, null );
-
-        while( fedamb.isAnnounced == false )
+        while(!fedamb.isAnnounced)
         {
             rtiamb.tick();
         }
@@ -57,29 +34,27 @@ public class QueueFederate {
 
         rtiamb.synchronizationPointAchieved( ConfigConstants.READY_TO_RUN );
         log( "Achieved sync point: " +ConfigConstants.READY_TO_RUN+ ", waiting for federation..." );
-        while( fedamb.isReadyToRun == false )
+        while(!fedamb.isReadyToRun)
         {
             rtiamb.tick();
         }
 
-        enableTimePolicy();
-
+        enableTimePolicy(fedamb);
         publishAndSubscribe();
-
         registerStorageObject();
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeToAdvance);
+            advanceTime(timeToAdvance, fedamb);
             sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
 
             if(fedamb.externalEvents.size() > 0) {
-                fedamb.externalEvents.sort(new ExternalEventQueue.ExternalEventComparator());
-                for(ExternalEventQueue externalEvent : fedamb.externalEvents) {
+                fedamb.externalEvents.sort(new QueueExternalEvent.ExternalEventComparator());
+                for(QueueExternalEvent externalEvent : fedamb.externalEvents) {
                     fedamb.federateTime = externalEvent.getTime();
                     switch (externalEvent.getEventType()) {
                         case JOIN_CLIENT_TO_QUEUE:
-//                            log (externalEvent.getQty() + "");
+                            clientJoinedToQueue(externalEvent.getQty());
                             break;
 
                         case OPEN_NEW_CASH_REGISTER:
@@ -87,7 +62,7 @@ public class QueueFederate {
 //                            this.getFromStock(externalEvent.getQty());
                             break;
                         default:
-                            log ("Default");
+                            log("Undetected interaction.");
                             break;
                     }
                 }
@@ -96,29 +71,17 @@ public class QueueFederate {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
-                log("Updating stock at time: " + timeToAdvance);
+                log("Updating queue at time: " + timeToAdvance);
                 updateHLAObject(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
 
             rtiamb.tick();
         }
-
     }
 
-    private void waitForUser()
-    {
-        log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
-        BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
-        try
-        {
-            reader.readLine();
-        }
-        catch( Exception e )
-        {
-            log( "Error while waiting for user input: " + e.getMessage() );
-            e.printStackTrace();
-        }
+    private void clientJoinedToQueue(int qty) {
+        queueNr++;
     }
 
     private void registerStorageObject() throws RTIexception {
@@ -134,36 +97,15 @@ public class QueueFederate {
         int queueNumberHandle = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_NUMBER_NAME, classHandle );
         int cashRegisterNumberHandle = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, classHandle );
         int queueLengthHandle = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_LENGTH_NAME, classHandle );
-        byte[] queueNumber = EncodingHelpers.encodeInt(2);
-        byte[] cashRegisterNumber = EncodingHelpers.encodeInt(3);
-        byte[] queueLength = EncodingHelpers.encodeInt(1);
-
+        byte[] queueNumber = EncodingHelpers.encodeInt(queueNr);
+        byte[] cashRegisterNumber = EncodingHelpers.encodeInt(cashRegisterNr);
+        byte[] queueLength = EncodingHelpers.encodeInt(queueLengthNr);
 
         attributes.add(queueNumberHandle, queueNumber);
         attributes.add(cashRegisterNumberHandle, cashRegisterNumber);
         attributes.add(queueLengthHandle, queueLength);
         LogicalTime logicalTime = convertTime( time );
         rtiamb.updateAttributeValues( queueHlaHandle, attributes, "actualize queue".getBytes(), logicalTime );
-    }
-
-    private void enableTimePolicy() throws RTIexception
-    {
-        LogicalTime currentTime = convertTime( fedamb.federateTime );
-        LogicalTimeInterval lookahead = convertInterval( fedamb.federateLookahead );
-
-        this.rtiamb.enableTimeRegulation( currentTime, lookahead );
-
-        while( fedamb.isRegulating == false )
-        {
-            rtiamb.tick();
-        }
-
-        this.rtiamb.enableTimeConstrained();
-
-        while( fedamb.isConstrained == false )
-        {
-            rtiamb.tick();
-        }
     }
 
     private void sendInteraction(double timeStep) throws RTIexception {
@@ -193,18 +135,15 @@ public class QueueFederate {
     }
 
     private void publishAndSubscribe() throws RTIexception {
+        // Register publish Interaction startHandlingClient
         int startHandlingClientHandle = rtiamb.getInteractionClassHandle( ConfigConstants.START_HANDLING_CLIENT_NAME );
         rtiamb.publishInteractionClass(startHandlingClientHandle);
 
-        byte[] queueNumber = EncodingHelpers.encodeInt(2);
-        byte[] cashRegisterNumber = EncodingHelpers.encodeInt(3);
-        byte[] queueLengthNumber = EncodingHelpers.encodeInt(10);
-
+        // Register publish Object Queue
         int queueHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME );
         int queueNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_NUMBER_NAME, queueHandle );
         int cashRegisterNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, queueHandle );
         int queueLengthNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_LENGTH_NAME, queueHandle );
-
 
         AttributeHandleSet attributes =
                 RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
@@ -214,52 +153,20 @@ public class QueueFederate {
 
         rtiamb.publishObjectClass(queueHandle, attributes);
 
+        // Register subscribe to Interaction joinClientToQueue
         int joinClientToQueueHandle = rtiamb.getInteractionClassHandle( ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME );
         fedamb.joinClientToQueueHandle = joinClientToQueueHandle;
         rtiamb.subscribeInteractionClass( joinClientToQueueHandle );
 
+        // Register subscribe to Interaction openNewCashRegisterHandle
         int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME );
         fedamb.openNewCashRegisterHandle = openNewCashRegisterHandle;
         rtiamb.subscribeInteractionClass( openNewCashRegisterHandle );
+
+        // Todo: Register Subscribe Object CashRegister
     }
 
-    private void advanceTime( double timestep ) throws RTIexception
-    {
-        log("requesting time advance for: " + timestep);
-        // request the advance
-        fedamb.isAdvancing = true;
-        LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
-        rtiamb.timeAdvanceRequest( newTime );
-        while( fedamb.isAdvancing )
-        {
-            rtiamb.tick();
-        }
-    }
 
-    private double randomTime() {
-        Random r = new Random();
-        return 1 +(4 * r.nextDouble());
-    }
-
-    private LogicalTime convertTime(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTime( time );
-    }
-
-    /**
-     * Same as for {@link #convertTime(double)}
-     */
-    private LogicalTimeInterval convertInterval(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTimeInterval( time );
-    }
-
-    private void log( String message )
-    {
-        System.out.println( ConfigConstants.QUEUE_FED + "   : " + message );
-    }
 
     public static void main(String[] args) {
         try {
