@@ -4,9 +4,9 @@
  *   This file is part of portico.
  *
  *   portico is free software; you can redistribute it and/or modify
- *   it under the terms of the Common Developer and Distribution License (CDDL) 
+ *   it under the terms of the Common Developer and Distribution License (CDDL)
  *   as published by Sun Microsystems. For more information see the LICENSE file.
- *   
+ *
  *   Use of this software is strictly AT YOUR OWN RISK!!!
  *   If something bad happens you do not have permission to come crying to me.
  *   (that goes for your lawyer as well)
@@ -28,10 +28,10 @@ import java.net.MalformedURLException;
 /**
  * This is an example federate demonstrating how to properly use the HLA 1.3 Java
  * interface supplied with Portico.
- * 
+ *
  * As it is intended for example purposes, this is a rather simple federate. The
  * process is goes through is as follows:
- * 
+ *
  *  1. Create the RTIambassador
  *  2. Try to create the federation (nofail)
  *  3. Join the federation
@@ -47,7 +47,7 @@ import java.net.MalformedURLException;
  * 10. Delete the Object Instance
  * 11. Resign from Federation
  * 12. Try to destroy the federation (nofail)
- * 
+ *
  * NOTE: Those items marked with (nofail) deal with situations where multiple
  *       federates may be working in the federation. In this sitaution, the
  *       federate will attempt to carry out the tasks defined, but it won't
@@ -57,19 +57,19 @@ import java.net.MalformedURLException;
  * NOTE: Between actions 4. and 5., the federate will pause until the uses presses
  *       the enter key. This will give other federates a chance to enter the
  *       federation and prevent other federates from racing ahead.
- * 
- * 
+ *
+ *
  * The main method to take notice of is {@link #runFederate(String)}. It controls the
  * main simulation loop and triggers most of the important behaviour. To make the code
  * simpler to read and navigate, many of the important HLA activities are broken down
  * into separate methods. For example, if you want to know how to send an interaction,
  * see the {@link #sendInteraction()} method.
- * 
+ *
  * With regard to the FederateAmbassador, it will log all incoming information. Thus,
  * if it receives any reflects or interactions etc... you will be notified of them.
- * 
+ *
  * Note that all of the methods throw an RTIexception. This class is the parent of all
- * HLA exceptions. The HLA Java interface is full of exceptions, with only a handful 
+ * HLA exceptions. The HLA Java interface is full of exceptions, with only a handful
  * being actually useful. To make matters worse, they're all checked exceptions, so
  * unlike C++, we are forced to handle them by the compiler. This is unnecessary in
  * this small example, so we'll just throw all exceptions out to the main method and
@@ -85,8 +85,8 @@ public class Example13Federate
 
 	/** The sync point all federates will sync up on before starting */
 	public static final String READY_TO_RUN = "ReadyToRun";
-	
-	
+
+
 
 	//----------------------------------------------------------
 	//                   INSTANCE VARIABLES
@@ -132,7 +132,7 @@ public class Example13Federate
 		// PORTICO SPECIFIC!!
 		return new DoubleTime( time );
 	}
-	
+
 	/**
 	 * Same as for {@link #convertTime(double)}
 	 */
@@ -181,7 +181,7 @@ public class Example13Federate
 			urle.printStackTrace();
 			return;
 		}
-		
+
 		////////////////////////////
 		// 3. join the federation //
 		////////////////////////////
@@ -242,7 +242,7 @@ public class Example13Federate
 		/////////////////////////////////////
 		int objectHandle = registerObject();
 		log( "Registered Object, handle=" + objectHandle );
-		
+
 		////////////////////////////////////
 		// 9. do the main simulation loop //
 		////////////////////////////////////
@@ -254,19 +254,19 @@ public class Example13Federate
 		{
 			// 9.1 update the attribute values of the instance //
 			updateAttributeValues( objectHandle );
-			
+
 			// 9.2 send an interaction
 			sendInteraction();
-			
+
 			// 9.3 request a time advance and wait until we get it
 			advanceTime( 1.0 );
 			log( "Time Advanced to " + fedamb.federateTime );
-			
+
 			rtiamb.tick();
-			
+
 		}
 		log("===================== KONIEC SYMULACJI ===================== ");
-		
+
 		//////////////////////////////////////
 		// 10. delete the object we created //
 		//////////////////////////////////////
@@ -298,7 +298,7 @@ public class Example13Federate
 			log( "Didn't destroy federation, federates still joined" );
 		}
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
 	////////////////////////////// Helper Methods //////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
@@ -311,10 +311,10 @@ public class Example13Federate
 		// NOTE: Unfortunately, the LogicalTime/LogicalTimeInterval create code is
 		//       Portico specific. You will have to alter this if you move to a
 		//       different RTI implementation. As such, we've isolated it into a
-		//       method so that any change only needs to happen in a couple of spots 
+		//       method so that any change only needs to happen in a couple of spots
 		LogicalTime currentTime = convertTime( fedamb.federateTime );
 		LogicalTimeInterval lookahead = convertInterval( fedamb.federateLookahead );
-		
+
 		////////////////////////////
 		// enable time regulation //
 		////////////////////////////
@@ -325,19 +325,19 @@ public class Example13Federate
 		{
 			rtiamb.tick();
 		}
-		
+
 		/////////////////////////////
 		// enable time constrained //
 		/////////////////////////////
 		this.rtiamb.enableTimeConstrained();
-		
+
 		// tick until we get the callback
 		while( fedamb.isConstrained == false )
 		{
 			rtiamb.tick();
 		}
 	}
-	
+
 	/**
 	 * This method will inform the RTI about the types of data that the federate will
 	 * be creating, and the types of data we are interested in hearing about as other
@@ -364,7 +364,7 @@ public class Example13Federate
 		attributes.add( aaHandle );
 		attributes.add( abHandle );
 		attributes.add( acHandle );
-		
+
 		// do the actual publication
 		rtiamb.publishObjectClass( classHandle, attributes );
 
@@ -373,7 +373,7 @@ public class Example13Federate
 		/////////////////////////////////////////////////
 		// we also want to hear about the same sort of information as it is
 		// created and altered in other federates, so we need to subscribe to it
-		
+
 		rtiamb.subscribeObjectClassAttributes( classHandle, attributes );
 
 		/////////////////////////////////////////////////////
@@ -383,7 +383,7 @@ public class Example13Federate
 		// to tell the RTI that we're publishing it first. We don't need to
 		// inform it of the parameters, only the class, making it much simpler
 		int interactionHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.X" );
-		
+
 		// do the publication
 		rtiamb.publishInteractionClass( interactionHandle );
 
@@ -394,7 +394,7 @@ public class Example13Federate
 		// sent out by other federates, so we have to subscribe to it first
 		rtiamb.subscribeInteractionClass( interactionHandle );
 	}
-	
+
 	/**
 	 * This method will register an instance of the class ObjectRoot.A and will
 	 * return the federation-wide unique handle for that instance. Later in the
@@ -405,7 +405,7 @@ public class Example13Federate
 		int classHandle = rtiamb.getObjectClassHandle( "ObjectRoot.A" );
 		return rtiamb.registerObjectInstance( classHandle );
 	}
-	
+
 	/**
 	 * This method will update all the values of the given object instance. It will
 	 * set each of the values to be a string which is equal to the name of the
@@ -423,13 +423,13 @@ public class Example13Federate
 		// this is quite a lot of work
 		SuppliedAttributes attributes =
 			RtiFactoryFactory.getRtiFactory().createSuppliedAttributes();
-		
+
 		// generate the new values
 		// we use EncodingHelpers to make things nice friendly for both Java and C++
 		byte[] aaValue = EncodingHelpers.encodeString( "aa:" + getLbts() );
 		byte[] abValue = EncodingHelpers.encodeString( "ab:" + getLbts() );
 		byte[] acValue = EncodingHelpers.encodeString( "ac:" + getLbts() );
-		
+
 		// get the handles
 		// this line gets the object class of the instance identified by the
 		// object instance the handle points to
@@ -447,13 +447,13 @@ public class Example13Federate
 		// do the actual update //
 		//////////////////////////
 		rtiamb.updateAttributeValues( objectHandle,attributes, generateTag() );
-		
+
 		// note that if you want to associate a particular timestamp with the
 		// update. here we send another update, this time with a timestamp:
 		LogicalTime time = convertTime( fedamb.federateTime + fedamb.federateLookahead );
 		rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
 	}
-	
+
 	/**
 	 * This method will send out an interaction of the type InteractionRoot.X. Any
 	 * federates which are subscribed to it will receive a notification the next time
@@ -468,12 +468,12 @@ public class Example13Federate
 		// create the collection to store the values in
 		SuppliedParameters parameters =
 			RtiFactoryFactory.getRtiFactory().createSuppliedParameters();
-		
+
 		// generate the new values
 		// we use EncodingHelpers to make things nice friendly for both Java and C++
 		byte[] xaValue = EncodingHelpers.encodeString( "xa:" + getLbts() );
 		byte[] xbValue = EncodingHelpers.encodeString( "xb:" + getLbts() );
-		
+
 		// get the handles
 		int classHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.X" );
 		int xaHandle = rtiamb.getParameterHandle( "xa", classHandle );
@@ -487,7 +487,7 @@ public class Example13Federate
 		// send the interaction //
 		//////////////////////////
 		rtiamb.sendInteraction( classHandle, parameters, generateTag() );
-		
+
 		// if you want to associate a particular timestamp with the
 		// interaction, you will have to supply it to the RTI. Here
 		// we send another interaction, this time with a timestamp:
@@ -507,7 +507,7 @@ public class Example13Federate
 		fedamb.isAdvancing = true;
 		LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
 		rtiamb.timeAdvanceRequest( newTime );
-		
+
 		// wait for the time advance to be granted. ticking will tell the
 		// LRC to start delivering callbacks to the federate
 		while( fedamb.isAdvancing )
@@ -548,7 +548,7 @@ public class Example13Federate
 			federateName = args[0];
 
 		}
-		
+
 		try
 		{
 			// run the example federate

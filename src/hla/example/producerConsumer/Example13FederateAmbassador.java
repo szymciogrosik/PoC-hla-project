@@ -4,9 +4,9 @@
  *   This file is part of portico.
  *
  *   portico is free software; you can redistribute it and/or modify
- *   it under the terms of the Common Developer and Distribution License (CDDL) 
+ *   it under the terms of the Common Developer and Distribution License (CDDL)
  *   as published by Sun Microsystems. For more information see the LICENSE file.
- *   
+ *
  *   Use of this software is strictly AT YOUR OWN RISK!!!
  *   If something bad happens you do not have permission to come crying to me.
  *   (that goes for your lawyer as well)
@@ -36,14 +36,14 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 	// these variables are accessible in the package
 	protected double federateTime        = 0.0;
 	protected double federateLookahead   = 1.0;
-	
+
 	protected boolean isRegulating       = false;
 	protected boolean isConstrained      = false;
 	protected boolean isAdvancing        = false;
-	
+
 	protected boolean isAnnounced        = false;
 	protected boolean isReadyToRun       = false;
-	
+
 	protected boolean running 			 = true;
     protected int finishHandle;
 
@@ -68,12 +68,12 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 		// PORTICO SPECIFIC!!
 		return ((DoubleTime)logicalTime).getTime();
 	}
-	
+
 	private void log( String message )
 	{
 		System.out.println( "FederateAmbassador: " + message );
 	}
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	////////////////////////// RTI Callback Methods //////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -147,7 +147,7 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 	                                    EventRetractionHandle retractionHandle )
 	{
 		StringBuilder builder = new StringBuilder( "Reflection for object:" );
-		
+
 		// print the handle
 		builder.append( " handle=" + theObject );
 		// print the tag
@@ -158,7 +158,7 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 		{
 			builder.append( ", time=" + convertTime(theTime) );
 		}
-		
+
 		// print the attribute information
 		builder.append( ", attributeCount=" + theAttributes.size() );
 		builder.append( "\n" );
@@ -180,7 +180,7 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 				// won't happen
 			}
 		}
-		
+
 		log( builder.toString() );
 	}
 
@@ -201,7 +201,7 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 	                                EventRetractionHandle eventRetractionHandle )
 	{
 		StringBuilder builder = new StringBuilder( "Interaction Received:" );
-		
+
 		// print the handle
 		builder.append( " handle=" + interactionClass );
 		// print the tag
@@ -212,8 +212,8 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 		{
 			builder.append( ", time=" + convertTime(theTime) );
 		}
-		
-		
+
+
 		// print the parameer information
 		builder.append( ", parameterCount=" + theInteraction.size() );
 		builder.append( "\n" );
@@ -235,7 +235,7 @@ public class Example13FederateAmbassador extends NullFederateAmbassador
 				// won't happen
 			}
 		}
-		
+
 		log( builder.toString() );
 	}
 
