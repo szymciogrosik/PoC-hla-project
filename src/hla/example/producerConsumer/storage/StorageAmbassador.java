@@ -92,6 +92,7 @@ public class StorageAmbassador extends NullFederateAmbassador {
 
     public void timeAdvanceGrant( LogicalTime theTime )
     {
+//        this.federateTime = convertTime( theTime );
         this.grantedTime = convertTime( theTime );
         this.isAdvancing = false;
     }

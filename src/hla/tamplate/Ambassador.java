@@ -7,7 +7,7 @@ import org.portico.impl.hla13.types.DoubleTime;
 
 public abstract class Ambassador extends NullFederateAmbassador {
     public double federateTime        = 0.0;
-    public double federateLookahead   = 1.0;
+//    public double federateLookahead   = 1.0;
 
     public boolean isRegulating       = false;
     public boolean isConstrained      = false;

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class QueueAmbassador extends Ambassador {
     protected double grantedTime         = 0.0;
+    public double federateLookahead      = 1.0;
 
     protected int joinClientToQueueHandle = 0;
     protected int openNewCashRegisterHandle = 2;
@@ -20,8 +21,6 @@ public class QueueAmbassador extends Ambassador {
     public void timeAdvanceGrant( LogicalTime theTime )
     {
         this.grantedTime = convertTime( theTime );
-        // Todo: Dodane przeze mnie nie wiadomo czy dobrze
-        this.federateTime = convertTime( theTime );
         this.isAdvancing = false;
     }
 

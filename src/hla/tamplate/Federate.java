@@ -13,16 +13,15 @@ import java.util.Random;
 
 public abstract class Federate {
     protected RTIambassador rtiamb;
-    protected final double timeStep           = 10.0;
 
-    protected void log( String message )
+    protected void log( String federateName, String message )
     {
-        System.out.println( ConfigConstants.QUEUE_FED + "   : " + message );
+        System.out.println( federateName + "   : " + message );
     }
 
-    protected void waitForUser()
+    protected void waitForUser(String federateName)
     {
-        log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
+        log( federateName, " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
         try
         {
@@ -30,27 +29,27 @@ public abstract class Federate {
         }
         catch( Exception e )
         {
-            log( "Error while waiting for user input: " + e.getMessage() );
+            log( federateName, "Error while waiting for user input: " + e.getMessage() );
             e.printStackTrace();
         }
     }
 
-    protected void tryCreateFederation() throws ConcurrentAccessAttempted, RTIinternalError, CouldNotOpenFED, ErrorReadingFED {
+    protected void tryCreateFederation(String federateName) throws ConcurrentAccessAttempted, RTIinternalError, CouldNotOpenFED, ErrorReadingFED {
         try
         {
             File fom = new File(ConfigConstants.FEDERATION_FILE_PATH);
             rtiamb.createFederationExecution( ConfigConstants.FEDERATION_NAME,
                     fom.toURI().toURL() );
-            log( "Created Federation" );
+            log( federateName, "Created Federation" );
         }
         catch( FederationExecutionAlreadyExists exists )
         {
-            log( "Didn't create federation, it already existed" );
+            log( federateName, "Didn't create federation, it already existed" );
         }
         catch( MalformedURLException urle )
         {
-            log( "Exception processing fom: " + urle.getMessage() );
-            urle.printStackTrace();
+//            log( "Exception processing fom: " + urle.getMessage() );
+//            urle.printStackTrace();
             return;
         }
     }
@@ -75,9 +74,10 @@ public abstract class Federate {
         return new DoubleTimeInterval( time );
     }
 
-    protected void advanceTime(double timestep, Ambassador fedamb) throws RTIexception
+    // Waiting for sync from RTI
+    protected void advanceTime(String federateName, double timestep, Ambassador fedamb) throws RTIexception
     {
-        log("requesting time advance for: " + timestep);
+        log(federateName,"requesting time advance for: " + (fedamb.federateTime + timestep));
         // request the advance
         fedamb.isAdvancing = true;
         LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
@@ -88,10 +88,10 @@ public abstract class Federate {
         }
     }
 
-    protected void enableTimePolicy(Ambassador fedamb) throws RTIexception
+    protected void enableTimePolicy(Ambassador fedamb, double federateLookahead) throws RTIexception
     {
         LogicalTime currentTime = convertTime( fedamb.federateTime );
-        LogicalTimeInterval lookahead = convertInterval( fedamb.federateLookahead );
+        LogicalTimeInterval lookahead = convertInterval( federateLookahead );
 
         this.rtiamb.enableTimeRegulation( currentTime, lookahead );
 

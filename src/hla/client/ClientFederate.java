@@ -8,15 +8,16 @@ import hla.tamplate.Federate;
 
 public class ClientFederate extends Federate {
     private ClientAmbassador fedamb;
+    private final double timeStep           = 3.0;
 
     private void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
 
-        tryCreateFederation();
+        tryCreateFederation(ConfigConstants.CLIENT_FED);
 
         fedamb = new ClientAmbassador();
         rtiamb.joinFederationExecution( ConfigConstants.CLIENT_FED, ConfigConstants.FEDERATION_NAME, fedamb );
-        log( "Joined Federation as " + ConfigConstants.CLIENT_FED);
+        log( ConfigConstants.CLIENT_FED,"Joined Federation as " + ConfigConstants.CLIENT_FED);
 
         rtiamb.registerFederationSynchronizationPoint( ConfigConstants.READY_TO_RUN, null );
         while(!fedamb.isAnnounced)
@@ -24,23 +25,32 @@ public class ClientFederate extends Federate {
             rtiamb.tick();
         }
 
-        waitForUser();
+        waitForUser(ConfigConstants.CLIENT_FED);
 
         rtiamb.synchronizationPointAchieved( ConfigConstants.READY_TO_RUN );
-        log( "Achieved sync point: " + ConfigConstants.READY_TO_RUN + ", waiting for federation..." );
+        log( ConfigConstants.CLIENT_FED, "Achieved sync point: " + ConfigConstants.READY_TO_RUN + ", waiting for federation..." );
         while(!fedamb.isReadyToRun)
         {
             rtiamb.tick();
         }
 
-        enableTimePolicy(fedamb);
+        enableTimePolicy(fedamb, fedamb.federateLookahead);
 
         publishAndSubscribe();
 
         while (fedamb.running) {
-            advanceTime(randomTime(), fedamb);
-            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
-            waitForUser();
+            double timeToAdvance = fedamb.federateTime + timeStep;
+            advanceTime(ConfigConstants.CLIENT_FED, timeStep, fedamb);
+
+            sendInteraction(timeToAdvance + fedamb.federateLookahead);
+
+            if(fedamb.grantedTime == timeToAdvance) {
+                timeToAdvance += fedamb.federateLookahead;
+                log(ConfigConstants.CLIENT_FED, "Updating client at time: " + timeToAdvance);
+                fedamb.federateTime = timeToAdvance;
+//            waitForUser();
+            }
+
             rtiamb.tick();
         }
     }
@@ -65,7 +75,7 @@ public class ClientFederate extends Federate {
         parameters.add(amountOfArticlesHandle, amountOfArticles);
 
         LogicalTime time = convertTime( timeStep );
-        log("Sending "+ ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME +": 1, 2, 12");
+        log(ConfigConstants.CLIENT_FED, "Sending "+ ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME +": 1, 2, 12");
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
     }
 

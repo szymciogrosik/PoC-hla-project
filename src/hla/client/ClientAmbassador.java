@@ -5,10 +5,13 @@ import hla.rti.jlc.EncodingHelpers;
 import hla.tamplate.Ambassador;
 
 public class ClientAmbassador extends Ambassador {
+    protected double grantedTime         = 0.0;
+    public double federateLookahead      = 1.0;
 
     public void timeAdvanceGrant( LogicalTime theTime )
     {
-        this.federateTime = convertTime( theTime );
+        this.grantedTime = convertTime( theTime );
+//        this.federateTime = convertTime( theTime );
         this.isAdvancing = false;
     }
 

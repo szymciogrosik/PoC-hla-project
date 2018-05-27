@@ -9,6 +9,7 @@ import hla.tamplate.Federate;
 public class QueueFederate extends Federate {
     private QueueAmbassador fedamb;
     private int queueHlaHandle;
+    private final double timeStep           = 10.0;
 
     private int queueNr = 0;
     private int cashRegisterNr = 0;
@@ -18,11 +19,11 @@ public class QueueFederate extends Federate {
     private void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
 
-        tryCreateFederation();
+        tryCreateFederation(ConfigConstants.QUEUE_FED);
 
         fedamb = new QueueAmbassador();
         rtiamb.joinFederationExecution( ConfigConstants.QUEUE_FED, ConfigConstants.FEDERATION_NAME, fedamb );
-        log( "Joined Federation as " + ConfigConstants.QUEUE_FED);
+        log( ConfigConstants.QUEUE_FED,"Joined Federation as " + ConfigConstants.QUEUE_FED);
 
         rtiamb.registerFederationSynchronizationPoint( ConfigConstants.READY_TO_RUN, null );
         while(!fedamb.isAnnounced)
@@ -30,23 +31,24 @@ public class QueueFederate extends Federate {
             rtiamb.tick();
         }
 
-        waitForUser();
+        waitForUser(ConfigConstants.QUEUE_FED);
 
         rtiamb.synchronizationPointAchieved( ConfigConstants.READY_TO_RUN );
-        log( "Achieved sync point: " +ConfigConstants.READY_TO_RUN+ ", waiting for federation..." );
+        log( ConfigConstants.QUEUE_FED,"Achieved sync point: " +ConfigConstants.READY_TO_RUN+ ", waiting for federation..." );
         while(!fedamb.isReadyToRun)
         {
             rtiamb.tick();
         }
 
-        enableTimePolicy(fedamb);
+        enableTimePolicy(fedamb, fedamb.federateLookahead);
         publishAndSubscribe();
         registerStorageObject();
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeToAdvance, fedamb);
-            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
+            advanceTime(ConfigConstants.QUEUE_FED, timeStep, fedamb);
+
+            sendInteraction(timeToAdvance + fedamb.federateLookahead);
 
             if(fedamb.externalEvents.size() > 0) {
                 fedamb.externalEvents.sort(new QueueExternalEvent.ExternalEventComparator());
@@ -58,11 +60,11 @@ public class QueueFederate extends Federate {
                             break;
 
                         case OPEN_NEW_CASH_REGISTER:
-                            log("Drugie wejscie");
+                            log(ConfigConstants.QUEUE_FED, "Drugie wejscie");
 //                            this.getFromStock(externalEvent.getQty());
                             break;
                         default:
-                            log("Undetected interaction.");
+                            log( ConfigConstants.QUEUE_FED, "Undetected interaction.");
                             break;
                     }
                 }
@@ -71,9 +73,10 @@ public class QueueFederate extends Federate {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
-                log("Updating queue at time: " + timeToAdvance);
+                log(ConfigConstants.QUEUE_FED, "Updating queue at time: " + timeToAdvance);
                 updateHLAObject(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
+//                waitForUser(ConfigConstants.QUEUE_FED);
             }
 
             rtiamb.tick();
@@ -130,7 +133,7 @@ public class QueueFederate extends Federate {
         parameters.add(cashRegisterNumberHandle, cashRegisterNumber);
 
         LogicalTime time = convertTime( timeStep );
-        log("Sending "+ ConfigConstants.START_HANDLING_CLIENT_NAME +": 1, 2, 12, 3");
+        log(ConfigConstants.QUEUE_FED, "Sending "+ ConfigConstants.START_HANDLING_CLIENT_NAME +": 1, 2, 12, 3");
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
     }
 
