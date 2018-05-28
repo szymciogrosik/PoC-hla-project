@@ -1,6 +1,5 @@
 package hla.tamplate;
 
-import hla.client.ClientAmbassador;
 import hla.constants.ConfigConstants;
 import hla.rti.*;
 import hla.rti.jlc.RtiFactoryFactory;

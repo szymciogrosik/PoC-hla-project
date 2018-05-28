@@ -10,9 +10,9 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private int queueHlaHandle;
     private final double timeStep           = 10.0;
 
-    private int queueNr                     = 0;
-    private int cashRegisterNr              = 0;
-    private int queueLengthNr               = 0;
+    private int queueNr                     = 44;
+    private int cashRegisterNr              = 55;
+    private int queueLengthNr               = 66;
 
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
