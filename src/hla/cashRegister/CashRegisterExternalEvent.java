@@ -1,15 +1,15 @@
-package hla.queue;
+package hla.cashRegister;
 
 import java.util.Comparator;
 
-public class QueueExternalEvent {
-    public enum EventType {JOIN_CLIENT_TO_QUEUE, OPEN_NEW_CASH_REGISTER}
+public class CashRegisterExternalEvent {
+    public enum EventType {START_HANDLING_CLIENT, OPEN_NEW_CASH_REGISTER}
 
     private  int qty;
     private EventType eventType;
     private Double time;
 
-    public QueueExternalEvent(int qty, EventType eventType, Double time) {
+    public CashRegisterExternalEvent(int qty, EventType eventType, Double time) {
         this.qty = qty;
         this.eventType = eventType;
         this.time = time;
@@ -27,9 +27,9 @@ public class QueueExternalEvent {
         return time;
     }
 
-    static class ExternalEventComparator implements Comparator<QueueExternalEvent> {
+    static class ExternalEventComparator implements Comparator<CashRegisterExternalEvent> {
         @Override
-        public int compare(QueueExternalEvent o1, QueueExternalEvent o2) {
+        public int compare(CashRegisterExternalEvent o1, CashRegisterExternalEvent o2) {
             return o1.time.compareTo(o2.time);
         }
     }

@@ -25,7 +25,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
-                log("Updating client at time: " + timeToAdvance);
+                log("Updating client time: " + timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
 //            waitForUser();
             }
@@ -64,17 +64,17 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         rtiamb.publishInteractionClass(joinClientToQueueHandle);
 
         // Register listening on queue objects
-        int simObjectClassHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME);
-        int queueNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_NUMBER_NAME, simObjectClassHandle);
-        int cashRegisterNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.CASH_REGISTER_NUMBER_NAME, simObjectClassHandle);
-        int queueLengthHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_LENGTH_NAME, simObjectClassHandle);
+        int queueHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME);
+        int queueNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_NUMBER_NAME, queueHandle);
+        int cashRegisterNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.CASH_REGISTER_NUMBER_NAME, queueHandle);
+        int queueLengthHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_LENGTH_NAME, queueHandle);
 
         AttributeHandleSet attributes = RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
         attributes.add(queueNumberHandle);
         attributes.add(cashRegisterNumberHandle);
         attributes.add(queueLengthHandle);
 
-        rtiamb.subscribeObjectClassAttributes(simObjectClassHandle, attributes);
+        rtiamb.subscribeObjectClassAttributes(queueHandle, attributes);
     }
 
     public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {

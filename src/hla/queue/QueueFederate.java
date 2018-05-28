@@ -146,7 +146,16 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         fedamb.openNewCashRegisterHandle = openNewCashRegisterHandle;
         rtiamb.subscribeInteractionClass( openNewCashRegisterHandle );
 
-        // Todo: Register Subscribe Object CashRegister
+        // Register listening on cash register objects
+        int cashRegisterHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.CASH_REGISTER_OBJ_NAME );
+        int cashRegisterNumber2Handle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, cashRegisterHandle );
+        int isFreeHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_IS_FREE_NAME, cashRegisterHandle );
+
+        AttributeHandleSet attributes2 = RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
+        attributes2.add(cashRegisterNumber2Handle);
+        attributes2.add(isFreeHandle);
+
+        rtiamb.subscribeObjectClassAttributes(cashRegisterHandle, attributes2);
     }
 
 
