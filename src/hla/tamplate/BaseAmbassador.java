@@ -5,18 +5,25 @@ import hla.rti.LogicalTime;
 import hla.rti.jlc.NullFederateAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 
-public abstract class Ambassador extends NullFederateAmbassador {
-    public double federateTime        = 0.0;
-//    public double federateLookahead   = 1.0;
+public abstract class BaseAmbassador extends NullFederateAmbassador {
+    public double federateTime          = 0.0;
+    public double federateLookahead     = 1.0;
+    protected double grantedTime        = 0.0;
 
-    public boolean isRegulating       = false;
-    public boolean isConstrained      = false;
-    public boolean isAdvancing        = false;
+    public boolean isRegulating         = false;
+    public boolean isConstrained        = false;
+    public boolean isAdvancing          = false;
 
-    public boolean isAnnounced        = false;
-    public boolean isReadyToRun       = false;
+    public boolean isAnnounced          = false;
+    public boolean isReadyToRun         = false;
 
-    public boolean running 			 = true;
+    public boolean running 			    = true;
+
+    public void timeAdvanceGrant( LogicalTime theTime )
+    {
+        this.grantedTime = convertTime( theTime );
+        this.isAdvancing = false;
+    }
 
     protected double convertTime(LogicalTime logicalTime)
     {

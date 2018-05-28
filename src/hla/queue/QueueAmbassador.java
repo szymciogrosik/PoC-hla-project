@@ -5,24 +5,15 @@ import hla.rti.EventRetractionHandle;
 import hla.rti.LogicalTime;
 import hla.rti.ReceivedInteraction;
 import hla.rti.jlc.EncodingHelpers;
-import hla.tamplate.Ambassador;
+import hla.tamplate.BaseAmbassador;
 
 import java.util.ArrayList;
 
-public class QueueAmbassador extends Ambassador {
-    protected double grantedTime         = 0.0;
-    public double federateLookahead      = 1.0;
-
+public class QueueAmbassador extends BaseAmbassador {
     protected int joinClientToQueueHandle = 0;
     protected int openNewCashRegisterHandle = 2;
 
     protected ArrayList<QueueExternalEvent> externalEvents = new ArrayList<>();
-
-    public void timeAdvanceGrant( LogicalTime theTime )
-    {
-        this.grantedTime = convertTime( theTime );
-        this.isAdvancing = false;
-    }
 
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,

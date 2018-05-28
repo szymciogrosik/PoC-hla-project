@@ -1,7 +1,9 @@
 package hla.tamplate;
 
+import hla.client.ClientAmbassador;
 import hla.constants.ConfigConstants;
 import hla.rti.*;
+import hla.rti.jlc.RtiFactoryFactory;
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
 
@@ -11,17 +13,48 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Random;
 
-public abstract class Federate {
+public abstract class BaseFederate<T extends BaseAmbassador> {
     protected RTIambassador rtiamb;
+    protected T fedamb;
 
-    protected void log( String federateName, String message )
+    private String federateName = "DefaultName";
+
+    protected void init(String classPath) throws RTIexception, ClassNotFoundException, IllegalAccessException, InstantiationException {
+        rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+
+        tryCreateFederation();
+
+        fedamb = (T) Class.forName(classPath).newInstance();
+
+        rtiamb.joinFederationExecution( federateName, ConfigConstants.FEDERATION_NAME, fedamb );
+        log("Joined Federation as " + federateName);
+
+        rtiamb.registerFederationSynchronizationPoint( ConfigConstants.READY_TO_RUN, null );
+        while(!fedamb.isAnnounced)
+        {
+            rtiamb.tick();
+        }
+
+        waitForUser();
+
+        rtiamb.synchronizationPointAchieved( ConfigConstants.READY_TO_RUN );
+        log("Achieved sync point: " + ConfigConstants.READY_TO_RUN + ", waiting for federation..." );
+        while(!fedamb.isReadyToRun)
+        {
+            rtiamb.tick();
+        }
+
+        enableTimePolicy(fedamb.federateLookahead);
+    }
+
+    protected void log( String message )
     {
         System.out.println( federateName + "   : " + message );
     }
 
-    protected void waitForUser(String federateName)
+    protected void waitForUser()
     {
-        log( federateName, " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
+        log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
         try
         {
@@ -29,27 +62,27 @@ public abstract class Federate {
         }
         catch( Exception e )
         {
-            log( federateName, "Error while waiting for user input: " + e.getMessage() );
+            log( "Error while waiting for user input: " + e.getMessage() );
             e.printStackTrace();
         }
     }
 
-    protected void tryCreateFederation(String federateName) throws ConcurrentAccessAttempted, RTIinternalError, CouldNotOpenFED, ErrorReadingFED {
+    protected void tryCreateFederation() throws ConcurrentAccessAttempted, RTIinternalError, CouldNotOpenFED, ErrorReadingFED {
         try
         {
             File fom = new File(ConfigConstants.FEDERATION_FILE_PATH);
             rtiamb.createFederationExecution( ConfigConstants.FEDERATION_NAME,
                     fom.toURI().toURL() );
-            log( federateName, "Created Federation" );
+            log( "Created Federation" );
         }
         catch( FederationExecutionAlreadyExists exists )
         {
-            log( federateName, "Didn't create federation, it already existed" );
+            log( "Didn't create federation, it already existed" );
         }
         catch( MalformedURLException urle )
         {
-//            log( "Exception processing fom: " + urle.getMessage() );
-//            urle.printStackTrace();
+            log( "Exception processing fom: " + urle.getMessage() );
+            urle.printStackTrace();
             return;
         }
     }
@@ -75,9 +108,9 @@ public abstract class Federate {
     }
 
     // Waiting for sync from RTI
-    protected void advanceTime(String federateName, double timestep, Ambassador fedamb) throws RTIexception
+    protected void advanceTime(double timestep) throws RTIexception
     {
-        log(federateName,"requesting time advance for: " + (fedamb.federateTime + timestep));
+        log("requesting time advance for: " + (fedamb.federateTime + timestep));
         // request the advance
         fedamb.isAdvancing = true;
         LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
@@ -88,23 +121,31 @@ public abstract class Federate {
         }
     }
 
-    protected void enableTimePolicy(Ambassador fedamb, double federateLookahead) throws RTIexception
+    protected void enableTimePolicy(double federateLookahead) throws RTIexception
     {
         LogicalTime currentTime = convertTime( fedamb.federateTime );
         LogicalTimeInterval lookahead = convertInterval( federateLookahead );
 
         this.rtiamb.enableTimeRegulation( currentTime, lookahead );
 
-        while( fedamb.isRegulating == false )
+        while(!fedamb.isRegulating)
         {
             rtiamb.tick();
         }
 
         this.rtiamb.enableTimeConstrained();
 
-        while( fedamb.isConstrained == false )
+        while(!fedamb.isConstrained)
         {
             rtiamb.tick();
         }
+    }
+
+    public String getFederateName() {
+        return federateName;
+    }
+
+    public void setFederateName(String federateName) {
+        this.federateName = federateName;
     }
 }

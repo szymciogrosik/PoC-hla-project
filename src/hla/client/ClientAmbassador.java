@@ -2,19 +2,9 @@ package hla.client;
 
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
-import hla.tamplate.Ambassador;
+import hla.tamplate.BaseAmbassador;
 
-public class ClientAmbassador extends Ambassador {
-    protected double grantedTime         = 0.0;
-    public double federateLookahead      = 1.0;
-
-    public void timeAdvanceGrant( LogicalTime theTime )
-    {
-        this.grantedTime = convertTime( theTime );
-//        this.federateTime = convertTime( theTime );
-        this.isAdvancing = false;
-    }
-
+public class ClientAmbassador extends BaseAmbassador {
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag) {
         reflectAttributeValues(theObject, theAttributes, tag, null, null);

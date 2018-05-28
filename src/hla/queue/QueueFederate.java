@@ -4,49 +4,29 @@ import hla.constants.ConfigConstants;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
-import hla.tamplate.Federate;
+import hla.tamplate.BaseFederate;
 
-public class QueueFederate extends Federate {
-    private QueueAmbassador fedamb;
+public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private int queueHlaHandle;
     private final double timeStep           = 10.0;
 
-    private int queueNr = 0;
-    private int cashRegisterNr = 0;
-    private int queueLengthNr = 0;
+    private int queueNr                     = 0;
+    private int cashRegisterNr              = 0;
+    private int queueLengthNr               = 0;
 
 
-    private void runFederate() throws RTIexception {
-        rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+    private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
+        this.setFederateName(ConfigConstants.QUEUE_FED);
 
-        tryCreateFederation(ConfigConstants.QUEUE_FED);
+        // Create ambassador, tryCreateFederation, and waiting for first sync
+        init(QueueAmbassador.class.getCanonicalName());
 
-        fedamb = new QueueAmbassador();
-        rtiamb.joinFederationExecution( ConfigConstants.QUEUE_FED, ConfigConstants.FEDERATION_NAME, fedamb );
-        log( ConfigConstants.QUEUE_FED,"Joined Federation as " + ConfigConstants.QUEUE_FED);
-
-        rtiamb.registerFederationSynchronizationPoint( ConfigConstants.READY_TO_RUN, null );
-        while(!fedamb.isAnnounced)
-        {
-            rtiamb.tick();
-        }
-
-        waitForUser(ConfigConstants.QUEUE_FED);
-
-        rtiamb.synchronizationPointAchieved( ConfigConstants.READY_TO_RUN );
-        log( ConfigConstants.QUEUE_FED,"Achieved sync point: " +ConfigConstants.READY_TO_RUN+ ", waiting for federation..." );
-        while(!fedamb.isReadyToRun)
-        {
-            rtiamb.tick();
-        }
-
-        enableTimePolicy(fedamb, fedamb.federateLookahead);
         publishAndSubscribe();
         registerStorageObject();
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(ConfigConstants.QUEUE_FED, timeStep, fedamb);
+            advanceTime(timeStep);
 
             sendInteraction(timeToAdvance + fedamb.federateLookahead);
 
@@ -60,11 +40,11 @@ public class QueueFederate extends Federate {
                             break;
 
                         case OPEN_NEW_CASH_REGISTER:
-                            log(ConfigConstants.QUEUE_FED, "Drugie wejscie");
+                            log("Drugie wejscie");
 //                            this.getFromStock(externalEvent.getQty());
                             break;
                         default:
-                            log( ConfigConstants.QUEUE_FED, "Undetected interaction.");
+                            log("Undetected interaction.");
                             break;
                     }
                 }
@@ -73,7 +53,7 @@ public class QueueFederate extends Federate {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
-                log(ConfigConstants.QUEUE_FED, "Updating queue at time: " + timeToAdvance);
+                log("Updating queue at time: " + timeToAdvance);
                 updateHLAObject(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
 //                waitForUser(ConfigConstants.QUEUE_FED);
@@ -133,7 +113,7 @@ public class QueueFederate extends Federate {
         parameters.add(cashRegisterNumberHandle, cashRegisterNumber);
 
         LogicalTime time = convertTime( timeStep );
-        log(ConfigConstants.QUEUE_FED, "Sending "+ ConfigConstants.START_HANDLING_CLIENT_NAME +": 1, 2, 12, 3");
+        log("Sending "+ ConfigConstants.START_HANDLING_CLIENT_NAME +": 1, 2, 12, 3");
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
     }
 
@@ -171,7 +151,7 @@ public class QueueFederate extends Federate {
 
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         try {
             new QueueFederate().runFederate();
         } catch (RTIexception rtIexception) {
