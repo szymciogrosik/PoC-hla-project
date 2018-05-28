@@ -8,6 +8,7 @@ public class ConfigConstants {
     public static final String CASH_REGISTER_FED =      "KasaFederate";
     public static final String QUEUE_FED =              "KolejkaFederate";
     public static final String MANAGER_FED =            "ManagerFederate";
+    public static final String STATISTIC_FED =            "StatystykaFederate";
 
     public static final String CASH_REGISTER_OBJ_NAME = "Kasa";
     public static final String QUEUE_OBJ_NAME =         "Kolejka";

@@ -1,16 +1,18 @@
-package hla.queue;
+package hla.statistic;
 
+import hla.queue.QueueExternalEvent;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.tamplate.BaseAmbassador;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class QueueAmbassador extends BaseAmbassador {
+public class StatisticAmbassador extends BaseAmbassador {
     protected int joinClientToQueueHandle = 0;
-    protected int openNewCashRegisterHandle = 2;
+    protected int startHandlingClientHandle = 1;
 
-    protected ArrayList<QueueExternalEvent> externalEvents = new ArrayList<>();
+    protected ArrayList<StatisticExternalEvent> externalEvents = new ArrayList<>();
 
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,
@@ -33,7 +35,7 @@ public class QueueAmbassador extends BaseAmbassador {
             try {
                 int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
                 double time =  convertTime(theTime);
-                externalEvents.add(new QueueExternalEvent(qty, QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
+                externalEvents.add(new StatisticExternalEvent(qty, StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
                 builder.append("JOIN_CLIENT_TO_QUEUE , time=" + time);
                 builder.append(" qty=").append(qty);
                 builder.append( "\n" );
@@ -42,12 +44,12 @@ public class QueueAmbassador extends BaseAmbassador {
 
             }
 
-        } else if (interactionClass == openNewCashRegisterHandle) {
+        } else if (interactionClass == startHandlingClientHandle) {
             try {
                 int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
                 double time =  convertTime(theTime);
-                externalEvents.add(new QueueExternalEvent(qty, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
-                builder.append( "OPEN_NEW_CASH_REGISTER , time=" + time );
+                externalEvents.add(new StatisticExternalEvent(qty, StatisticExternalEvent.EventType.START_HANDLING_CLIENT , time));
+                builder.append( "START_HANDLING_CLIENT , time=" + time );
                 builder.append(" qty=").append(qty);
                 builder.append( "\n" );
 
@@ -82,12 +84,8 @@ public class QueueAmbassador extends BaseAmbassador {
                 builder.append(theAttributes.getAttributeHandle(i));
                 // print the attribute value
                 builder.append(", attributeValue=");
-                if(i != 1)
-                    builder.append(EncodingHelpers.decodeInt(theAttributes
+                builder.append(EncodingHelpers.decodeInt(theAttributes
                         .getValue(i)));
-                else
-                    builder.append(EncodingHelpers.decodeBoolean(theAttributes
-                            .getValue(i)));
                 builder.append(", time=");
                 builder.append(theTime);
                 builder.append("\n");

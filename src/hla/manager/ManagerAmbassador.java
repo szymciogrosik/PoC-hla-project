@@ -43,6 +43,6 @@ public class ManagerAmbassador extends BaseAmbassador {
 
     @Override
     public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) throws CouldNotDiscover, ObjectClassNotKnown, FederateInternalError {
-        System.out.println("Pojawil sie nowy obiekt typu SimObject");
+        System.out.println("Pojawil sie nowy obiekt typu SimObject " + theObject + " " + theObjectClass + " " + objectName);
     }
 }
