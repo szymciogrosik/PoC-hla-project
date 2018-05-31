@@ -24,6 +24,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         tryCreateFederation();
 
         fedamb = (T) Class.forName(classPath).newInstance();
+        fedamb.setRtiAmbassador(rtiamb);
 
         rtiamb.joinFederationExecution( federateName, ConfigConstants.FEDERATION_NAME, fedamb );
         log("Joined Federation as " + federateName);

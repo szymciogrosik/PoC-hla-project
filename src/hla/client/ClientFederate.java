@@ -23,6 +23,21 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
             sendInteraction(timeToAdvance + fedamb.federateLookahead);
 
+            if(fedamb.externalObjects.size() > 0) {
+                fedamb.externalObjects.sort(new ClientExternalObject.ExternalObjectComparator());
+                for(ClientExternalObject externalObject : fedamb.externalObjects) {
+                    switch (externalObject.getObjectType()) {
+                        case QUEUE:
+                            log("QUEUE");
+                            break;
+                        default:
+                            log("Undetected object.");
+                            break;
+                    }
+                }
+                fedamb.externalObjects.clear();
+            }
+
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
                 log("Updating client time: " + timeToAdvance);
@@ -64,7 +79,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         rtiamb.publishInteractionClass(joinClientToQueueHandle);
 
         // Register listening on queue objects
-        int queueHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME);
+        int queueHandle = rtiamb.getObjectClassHandle(ConfigConstants.QUEUE_OBJ_NAME);
         int queueNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_NUMBER_NAME, queueHandle);
         int cashRegisterNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.CASH_REGISTER_NUMBER_NAME, queueHandle);
         int queueLengthHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_LENGTH_NAME, queueHandle);

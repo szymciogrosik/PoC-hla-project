@@ -26,6 +26,24 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
 
             sendInteraction(timeToAdvance + fedamb.federateLookahead);
 
+            if(fedamb.externalObjects.size() > 0) {
+                fedamb.externalObjects.sort(new ManagerExternalObject.ExternalObjectComparator());
+                for(ManagerExternalObject externalObject : fedamb.externalObjects) {
+                    switch (externalObject.getObjectType()) {
+                        case QUEUE:
+                            log("QUEUE");
+                            break;
+                        case CASH_REGISTER:
+                            log("CASH_REGISTER");
+                            break;
+                        default:
+                            log("Undetected object.");
+                            break;
+                    }
+                }
+                fedamb.externalObjects.clear();
+            }
+
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
                 log("Updating manager time: " + timeToAdvance);
@@ -41,12 +59,11 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
         // Send Interaction openNewCashRegister
         SuppliedParameters parameters =
                 RtiFactoryFactory.getRtiFactory().createSuppliedParameters();
-//        Random random = new Random();
-//        int quantityInt = random.nextInt(10) + 1;
+
         byte[] cashRegisterNumber = EncodingHelpers.encodeInt(98);
         byte[] queueNumber = EncodingHelpers.encodeInt(99);
 
-        int interactionHandle = rtiamb.getInteractionClassHandle(ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME);
+        int interactionHandle = rtiamb.getInteractionClassHandle(ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
         int cashRegisterNumberHandle = rtiamb.getParameterHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, interactionHandle );
         int queueNumberHandle = rtiamb.getParameterHandle( ConfigConstants.QUEUE_NUMBER_NAME, interactionHandle );
 
@@ -54,17 +71,17 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
         parameters.add(queueNumberHandle, queueNumber);
 
         LogicalTime time = convertTime( timeStep );
-        log("Sending "+ ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME +": 98, 99");
+        log("Sending "+ ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME +": 98, 99");
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
     }
 
     protected void publishAndSubscribe() throws RTIexception {
         // Publish interaction openNewCashRegister
-        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME );
+        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
         rtiamb.publishInteractionClass(openNewCashRegisterHandle);
 
         // Register listening on queue objects
-        int queueHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME);
+        int queueHandle = rtiamb.getObjectClassHandle(ConfigConstants.QUEUE_OBJ_NAME);
         int queueNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_NUMBER_NAME, queueHandle);
         int cashRegisterNumberHandle = rtiamb.getAttributeHandle(ConfigConstants.CASH_REGISTER_NUMBER_NAME, queueHandle);
         int queueLengthHandle = rtiamb.getAttributeHandle(ConfigConstants.QUEUE_LENGTH_NAME, queueHandle);
@@ -77,7 +94,7 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
         rtiamb.subscribeObjectClassAttributes(queueHandle, attributes);
 
         // Register listening on cash register objects
-        int cashRegisterHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.CASH_REGISTER_OBJ_NAME );
+        int cashRegisterHandle = rtiamb.getObjectClassHandle( ConfigConstants.CASH_REGISTER_OBJ_NAME );
         int cashRegisterNumber2Handle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, cashRegisterHandle );
         int isFreeHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_IS_FREE_NAME, cashRegisterHandle );
 

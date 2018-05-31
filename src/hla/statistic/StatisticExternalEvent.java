@@ -1,16 +1,18 @@
 package hla.statistic;
 
+import hla.rti.ReceivedInteraction;
+
 import java.util.Comparator;
 
 public class StatisticExternalEvent {
     public enum EventType {START_HANDLING_CLIENT, JOIN_CLIENT_TO_QUEUE}
 
-    private  int qty;
+    private ReceivedInteraction theAttributes;
     private EventType eventType;
     private Double time;
 
-    public StatisticExternalEvent(int qty, EventType eventType, Double time) {
-        this.qty = qty;
+    public StatisticExternalEvent(ReceivedInteraction theAttributes, EventType eventType, Double time) {
+        this.theAttributes = theAttributes;
         this.eventType = eventType;
         this.time = time;
     }
@@ -19,8 +21,8 @@ public class StatisticExternalEvent {
         return eventType;
     }
 
-    public int getQty() {
-        return qty;
+    public ReceivedInteraction getAttributes() {
+        return theAttributes;
     }
 
     public double getTime() {

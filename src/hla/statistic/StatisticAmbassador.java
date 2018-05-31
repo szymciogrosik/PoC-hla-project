@@ -1,26 +1,20 @@
 package hla.statistic;
 
-import hla.queue.QueueExternalEvent;
+import hla.constants.ConfigConstants;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.tamplate.BaseAmbassador;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class StatisticAmbassador extends BaseAmbassador {
-    protected int joinClientToQueueHandle = 0;
-    protected int startHandlingClientHandle = 1;
-
     protected ArrayList<StatisticExternalEvent> externalEvents = new ArrayList<>();
+    protected ArrayList<StatisticExternalObject> externalObjects = new ArrayList<>();
 
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,
                                     byte[] tag )
     {
-        // just pass it on to the other method for printing purposes
-        // passing null as the time will let the other method know it
-        // it from us, not from the RTI
         receiveInteraction(interactionClass, theInteraction, tag, null, null);
     }
 
@@ -30,32 +24,48 @@ public class StatisticAmbassador extends BaseAmbassador {
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        StringBuilder builder = new StringBuilder( "Interaction Received:" );
-        if(interactionClass == joinClientToQueueHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new StatisticExternalEvent(qty, StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
-                builder.append("JOIN_CLIENT_TO_QUEUE , time=" + time);
-                builder.append(" qty=").append(qty);
+        String interactionName = "";
+
+        try {
+            interactionName = rtiAmbassador.getInteractionClassName(interactionClass);
+        } catch (RTIinternalError | FederateNotExecutionMember | InteractionClassNotDefined rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
+
+        StringBuilder builder = new StringBuilder( "Interaction Received: " );
+        double time =  convertTime(theTime);
+
+        switch (interactionName) {
+            case ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new StatisticExternalEvent(theInteraction, StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
+                    builder.append(StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CLIENT_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append(" " + ConfigConstants.AMOUNT_OF_ARTICLES_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(2)));
+                    builder.append( "\n" );
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                break;
+
+            case ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new StatisticExternalEvent(theInteraction, StatisticExternalEvent.EventType.START_HANDLING_CLIENT , time));
+                    builder.append(StatisticExternalEvent.EventType.START_HANDLING_CLIENT + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append(" " + ConfigConstants.CLIENT_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(2)));
+                    builder.append(" " + ConfigConstants.AMOUNT_OF_ARTICLES_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(3)));
+                    builder.append("\n");
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
                 builder.append( "\n" );
+                break;
 
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
-
-        } else if (interactionClass == startHandlingClientHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new StatisticExternalEvent(qty, StatisticExternalEvent.EventType.START_HANDLING_CLIENT , time));
-                builder.append( "START_HANDLING_CLIENT , time=" + time );
-                builder.append(" qty=").append(qty);
-                builder.append( "\n" );
-
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
+            default:
+                builder.append("Undetected interaction.");
         }
 
         log( builder.toString() );
@@ -69,36 +79,59 @@ public class StatisticAmbassador extends BaseAmbassador {
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
                                        EventRetractionHandle retractionHandle) {
-        StringBuilder builder = new StringBuilder("Reflection for object:");
+        String objectName = "";
+        double time =  convertTime(theTime);
 
-        builder.append(" handle=" + theObject);
-//		builder.append(", tag=" + EncodingHelpers.decodeString(tag));
+        try {
+            objectName = rtiAmbassador.getObjectClassName(rtiAmbassador.getObjectClass(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | ObjectClassNotDefined | ObjectNotKnown rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
 
-        // print the attribute information
-        builder.append(", attributeCount=" + theAttributes.size());
-        builder.append("\n");
-        for (int i = 0; i < theAttributes.size(); i++) {
-            try {
-                // print the attibute handle
-                builder.append("\tattributeHandle=");
-                builder.append(theAttributes.getAttributeHandle(i));
-                // print the attribute value
-                builder.append(", attributeValue=");
-                builder.append(EncodingHelpers.decodeInt(theAttributes
-                        .getValue(i)));
-                builder.append(", time=");
-                builder.append(theTime);
-                builder.append("\n");
-            } catch (ArrayIndexOutOfBounds aioob) {
-                // won't happen
-            }
+        StringBuilder builder = new StringBuilder("Reflection for object: ");
+
+        switch (objectName) {
+            case ConfigConstants.QUEUE_OBJ_NAME:
+                try {
+                    externalObjects.add(new StatisticExternalObject(theAttributes, StatisticExternalObject.ObjectType.QUEUE , time));
+                    builder.append(StatisticExternalObject.ObjectType.QUEUE + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(1)));
+                    builder.append(" " + ConfigConstants.QUEUE_LENGTH_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(2)));
+                    builder.append( "\n" );
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                break;
+
+            case ConfigConstants.CASH_REGISTER_OBJ_NAME:
+                try {
+                    externalObjects.add(new StatisticExternalObject(theAttributes, StatisticExternalObject.ObjectType.CASH_REGISTER , time));
+                    builder.append(StatisticExternalObject.ObjectType.CASH_REGISTER + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_IS_FREE_NAME + "=").append(EncodingHelpers.decodeBoolean(theAttributes.getValue(1)));
+                    builder.append("\n");
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                builder.append( "\n" );
+                break;
+
+            default:
+                builder.append("Undetected interaction.");
         }
 
         log(builder.toString());
     }
 
     @Override
-    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) throws ObjectClassNotKnown, FederateInternalError {
-        System.out.println("Pojawil sie nowy obiekt typu SimObject " + theObject + " " + theObjectClass + " " + objectName);
+    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
+        String objName = "";
+        try {
+            objName = rtiAmbassador.getObjectClassName(rtiAmbassador.getObjectClass(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | ObjectClassNotDefined | ObjectNotKnown rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
+        System.out.println("Pojawil sie nowy obiekt typu SimObject: " + objName + ".");
     }
 }

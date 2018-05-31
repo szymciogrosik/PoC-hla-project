@@ -38,9 +38,7 @@ public class CashRegisterAmbassador extends BaseAmbassador {
                 builder.append(" qty=").append(qty);
                 builder.append( "\n" );
 
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
+            } catch (ArrayIndexOutOfBounds ignored) { }
 
         } else if (interactionClass == openNewCashRegisterHandle) {
             try {

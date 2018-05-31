@@ -68,7 +68,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     }
 
     private void registerStorageObject() throws RTIexception {
-        int classHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME);
+        int classHandle = rtiamb.getObjectClassHandle(ConfigConstants.QUEUE_OBJ_NAME);
         this.queueHlaHandle = rtiamb.registerObjectInstance(classHandle);
     }
 
@@ -101,7 +101,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         byte[] amountOfArticles = EncodingHelpers.encodeInt(12);
         byte[] cashRegisterNumber = EncodingHelpers.encodeInt(3);
 
-        int interactionHandle = rtiamb.getInteractionClassHandle(ConfigConstants.START_HANDLING_CLIENT_NAME);
+        int interactionHandle = rtiamb.getInteractionClassHandle(ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME);
         int clientNumberHandle = rtiamb.getParameterHandle( ConfigConstants.CLIENT_NUMBER_NAME, interactionHandle );
         int queueNumberHandle = rtiamb.getParameterHandle( ConfigConstants.QUEUE_NUMBER_NAME, interactionHandle );
         int amountOfArticlesHandle = rtiamb.getParameterHandle( ConfigConstants.AMOUNT_OF_ARTICLES_NAME, interactionHandle );
@@ -113,17 +113,17 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         parameters.add(cashRegisterNumberHandle, cashRegisterNumber);
 
         LogicalTime time = convertTime( timeStep );
-        log("Sending "+ ConfigConstants.START_HANDLING_CLIENT_NAME +": 1, 2, 12, 3");
+        log("Sending "+ ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME +": 1, 2, 12, 3");
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
     }
 
     private void publishAndSubscribe() throws RTIexception {
         // Register publish Interaction startHandlingClient
-        int startHandlingClientHandle = rtiamb.getInteractionClassHandle( ConfigConstants.START_HANDLING_CLIENT_NAME );
+        int startHandlingClientHandle = rtiamb.getInteractionClassHandle( ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME);
         rtiamb.publishInteractionClass(startHandlingClientHandle);
 
         // Register publish Object Queue
-        int queueHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.QUEUE_OBJ_NAME );
+        int queueHandle = rtiamb.getObjectClassHandle( ConfigConstants.QUEUE_OBJ_NAME );
         int queueNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_NUMBER_NAME, queueHandle );
         int cashRegisterNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, queueHandle );
         int queueLengthNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.QUEUE_LENGTH_NAME, queueHandle );
@@ -142,12 +142,12 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         rtiamb.subscribeInteractionClass( joinClientToQueueHandle );
 
         // Register subscribe to Interaction openNewCashRegisterHandle
-        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME );
+        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
         fedamb.openNewCashRegisterHandle = openNewCashRegisterHandle;
         rtiamb.subscribeInteractionClass( openNewCashRegisterHandle );
 
         // Register listening on cash register objects
-        int cashRegisterHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.CASH_REGISTER_OBJ_NAME );
+        int cashRegisterHandle = rtiamb.getObjectClassHandle( ConfigConstants.CASH_REGISTER_OBJ_NAME );
         int cashRegisterNumber2Handle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, cashRegisterHandle );
         int isFreeHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_IS_FREE_NAME, cashRegisterHandle );
 

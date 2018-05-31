@@ -64,7 +64,7 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     }
 
     private void registerStorageObject() throws RTIexception {
-        int classHandle = rtiamb.getObjectClassHandle("ObjectRoot." + ConfigConstants.CASH_REGISTER_OBJ_NAME);
+        int classHandle = rtiamb.getObjectClassHandle(ConfigConstants.CASH_REGISTER_OBJ_NAME);
         this.cashRegisterHlaHandle = rtiamb.registerObjectInstance(classHandle);
     }
 
@@ -87,7 +87,7 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
 
     private void publishAndSubscribe() throws RTIexception {
         // Register publish Object Cash Register
-        int cashRegisterHandle = rtiamb.getObjectClassHandle( "ObjectRoot." + ConfigConstants.CASH_REGISTER_OBJ_NAME );
+        int cashRegisterHandle = rtiamb.getObjectClassHandle( ConfigConstants.CASH_REGISTER_OBJ_NAME );
         int cashRegisterNumberHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_NUMBER_NAME, cashRegisterHandle );
         int isFreeHandle    = rtiamb.getAttributeHandle( ConfigConstants.CASH_REGISTER_IS_FREE_NAME, cashRegisterHandle );
 
@@ -99,12 +99,12 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         rtiamb.publishObjectClass(cashRegisterHandle, attributes);
 
         // Register subscribe to Interaction joinClientToQueue
-        int startHandlingClientHandle = rtiamb.getInteractionClassHandle( ConfigConstants.START_HANDLING_CLIENT_NAME );
+        int startHandlingClientHandle = rtiamb.getInteractionClassHandle( ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME);
         fedamb.startHandlingClientHandle = startHandlingClientHandle;
         rtiamb.subscribeInteractionClass( startHandlingClientHandle );
 
         // Register subscribe to Interaction openNewCashRegisterHandle
-        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_NAME );
+        int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
         fedamb.openNewCashRegisterHandle = openNewCashRegisterHandle;
         rtiamb.subscribeInteractionClass( openNewCashRegisterHandle );
     }

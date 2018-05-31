@@ -1,5 +1,6 @@
 package hla.queue;
 
+import hla.constants.ConfigConstants;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.tamplate.BaseAmbassador;
@@ -7,6 +8,8 @@ import hla.tamplate.BaseAmbassador;
 import java.util.ArrayList;
 
 public class QueueAmbassador extends BaseAmbassador {
+    protected ArrayList<QueueExternalObject> externalObjects = new ArrayList<>();
+
     protected int joinClientToQueueHandle = 0;
     protected int openNewCashRegisterHandle = 2;
 
@@ -16,9 +19,6 @@ public class QueueAmbassador extends BaseAmbassador {
                                     ReceivedInteraction theInteraction,
                                     byte[] tag )
     {
-        // just pass it on to the other method for printing purposes
-        // passing null as the time will let the other method know it
-        // it from us, not from the RTI
         receiveInteraction(interactionClass, theInteraction, tag, null, null);
     }
 
@@ -38,9 +38,7 @@ public class QueueAmbassador extends BaseAmbassador {
                 builder.append(" qty=").append(qty);
                 builder.append( "\n" );
 
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
+            } catch (ArrayIndexOutOfBounds ignored) { }
 
         } else if (interactionClass == openNewCashRegisterHandle) {
             try {
@@ -51,9 +49,7 @@ public class QueueAmbassador extends BaseAmbassador {
                 builder.append(" qty=").append(qty);
                 builder.append( "\n" );
 
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
+            } catch (ArrayIndexOutOfBounds ignored) { }
         }
 
         log( builder.toString() );
@@ -67,33 +63,33 @@ public class QueueAmbassador extends BaseAmbassador {
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
                                        EventRetractionHandle retractionHandle) {
-        StringBuilder builder = new StringBuilder("Reflection for object:");
+        String objectName = "";
+        double time =  convertTime(theTime);
 
-        builder.append(" handle=" + theObject);
-//		builder.append(", tag=" + EncodingHelpers.decodeString(tag));
+        try {
+            objectName = rtiAmbassador.getObjectClassName(rtiAmbassador.getObjectClass(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | ObjectClassNotDefined | ObjectNotKnown rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
 
-        // print the attribute information
-        builder.append(", attributeCount=" + theAttributes.size());
-        builder.append("\n");
-        for (int i = 0; i < theAttributes.size(); i++) {
-            try {
-                // print the attibute handle
-                builder.append("\tattributeHandle=");
-                builder.append(theAttributes.getAttributeHandle(i));
-                // print the attribute value
-                builder.append(", attributeValue=");
-                if(i != 1)
-                    builder.append(EncodingHelpers.decodeInt(theAttributes
-                        .getValue(i)));
-                else
-                    builder.append(EncodingHelpers.decodeBoolean(theAttributes
-                            .getValue(i)));
-                builder.append(", time=");
-                builder.append(theTime);
-                builder.append("\n");
-            } catch (ArrayIndexOutOfBounds aioob) {
-                // won't happen
-            }
+        StringBuilder builder = new StringBuilder("Reflection for object: ");
+
+        switch (objectName) {
+            case ConfigConstants.CASH_REGISTER_OBJ_NAME:
+                try {
+                    externalObjects.add(new QueueExternalObject(theAttributes, QueueExternalObject.ObjectType.CASH_REGISTER , time));
+                    builder.append(QueueExternalObject.ObjectType.CASH_REGISTER + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_IS_FREE_NAME + "=").append(EncodingHelpers.decodeBoolean(theAttributes.getValue(1)));
+                    builder.append("\n");
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                builder.append( "\n" );
+                break;
+
+            default:
+                builder.append("Undetected interaction.");
         }
 
         log(builder.toString());

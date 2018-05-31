@@ -2,13 +2,15 @@ package hla.tamplate;
 
 import hla.constants.ConfigConstants;
 import hla.rti.LogicalTime;
+import hla.rti.RTIambassador;
 import hla.rti.jlc.NullFederateAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 
 public abstract class BaseAmbassador extends NullFederateAmbassador {
+    protected RTIambassador rtiAmbassador  = null;
     public double federateTime          = 0.0;
     public double federateLookahead     = 1.0;
-    public double grantedTime        = 0.0;
+    public double grantedTime           = 0.0;
 
     public boolean isRegulating         = false;
     public boolean isConstrained        = false;
@@ -75,4 +77,7 @@ public abstract class BaseAmbassador extends NullFederateAmbassador {
         this.isConstrained = true;
     }
 
+    public void setRtiAmbassador(RTIambassador rtiAmbassador) {
+        this.rtiAmbassador = rtiAmbassador;
+    }
 }
