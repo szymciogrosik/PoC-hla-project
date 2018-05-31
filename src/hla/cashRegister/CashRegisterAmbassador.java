@@ -1,18 +1,13 @@
 package hla.cashRegister;
 
-import hla.rti.ArrayIndexOutOfBounds;
-import hla.rti.EventRetractionHandle;
-import hla.rti.LogicalTime;
-import hla.rti.ReceivedInteraction;
+import hla.constants.ConfigConstants;
+import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.tamplate.BaseAmbassador;
 
 import java.util.ArrayList;
 
 public class CashRegisterAmbassador extends BaseAmbassador {
-    protected int startHandlingClientHandle = 1;
-    protected int openNewCashRegisterHandle = 2;
-
     protected ArrayList<CashRegisterExternalEvent> externalEvents = new ArrayList<>();
 
     public void receiveInteraction( int interactionClass,
@@ -28,30 +23,47 @@ public class CashRegisterAmbassador extends BaseAmbassador {
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        StringBuilder builder = new StringBuilder( "Interaction Received:" );
-        if(interactionClass == startHandlingClientHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new CashRegisterExternalEvent(qty, CashRegisterExternalEvent.EventType.START_HANDLING_CLIENT , time));
-                builder.append("START_HANDLING_CLIENT , time=" + time);
-                builder.append(" qty=").append(qty);
+        String interactionName = "";
+
+        try {
+            interactionName = rtiAmbassador.getInteractionClassName(interactionClass);
+        } catch (RTIinternalError | FederateNotExecutionMember | InteractionClassNotDefined rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
+
+        StringBuilder builder = new StringBuilder( "Interaction Received: " );
+        double time =  convertTime(theTime);
+
+        switch (interactionName) {
+            case ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new CashRegisterExternalEvent(theInteraction, CashRegisterExternalEvent.EventType.START_HANDLING_CLIENT , time));
+                    builder.append(CashRegisterExternalEvent.EventType.START_HANDLING_CLIENT + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append(" " + ConfigConstants.CLIENT_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(2)));
+                    builder.append(" " + ConfigConstants.AMOUNT_OF_ARTICLES_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(3)));
+                    builder.append("\n");
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
                 builder.append( "\n" );
+                break;
 
-            } catch (ArrayIndexOutOfBounds ignored) { }
+            case ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new CashRegisterExternalEvent(theInteraction, CashRegisterExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
+                    builder.append(CashRegisterExternalEvent.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append( "\n" );
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                break;
 
-        } else if (interactionClass == openNewCashRegisterHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new CashRegisterExternalEvent(qty, CashRegisterExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
-                builder.append( "OPEN_NEW_CASH_REGISTER , time=" + time );
-                builder.append(" qty=").append(qty);
-                builder.append( "\n" );
-
-            } catch (ArrayIndexOutOfBounds ignored) {
-
-            }
+            default:
+                builder.append("Undetected interaction.");
         }
 
         log( builder.toString() );

@@ -1,16 +1,18 @@
 package hla.cashRegister;
 
+import hla.rti.ReceivedInteraction;
+
 import java.util.Comparator;
 
 public class CashRegisterExternalEvent {
     public enum EventType {START_HANDLING_CLIENT, OPEN_NEW_CASH_REGISTER}
 
-    private  int qty;
+    private ReceivedInteraction attributes;
     private EventType eventType;
     private Double time;
 
-    public CashRegisterExternalEvent(int qty, EventType eventType, Double time) {
-        this.qty = qty;
+    public CashRegisterExternalEvent(ReceivedInteraction theAttributes, EventType eventType, Double time) {
+        this.attributes = theAttributes;
         this.eventType = eventType;
         this.time = time;
     }
@@ -19,8 +21,8 @@ public class CashRegisterExternalEvent {
         return eventType;
     }
 
-    public int getQty() {
-        return qty;
+    public ReceivedInteraction getAttributes() {
+        return attributes;
     }
 
     public double getTime() {

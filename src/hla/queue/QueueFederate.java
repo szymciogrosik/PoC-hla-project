@@ -33,15 +33,12 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
             if(fedamb.externalEvents.size() > 0) {
                 fedamb.externalEvents.sort(new QueueExternalEvent.ExternalEventComparator());
                 for(QueueExternalEvent externalEvent : fedamb.externalEvents) {
-                    fedamb.federateTime = externalEvent.getTime();
                     switch (externalEvent.getEventType()) {
                         case JOIN_CLIENT_TO_QUEUE:
-                            clientJoinedToQueue(externalEvent.getQty());
+                            log("JOIN_CLIENT_TO_QUEUE");
                             break;
-
                         case OPEN_NEW_CASH_REGISTER:
-                            log("Drugie wejscie");
-//                            this.getFromStock(externalEvent.getQty());
+                            log("OPEN_NEW_CASH_REGISTER");
                             break;
                         default:
                             log("Undetected interaction.");
@@ -49,6 +46,21 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                     }
                 }
                 fedamb.externalEvents.clear();
+            }
+
+            if(fedamb.externalObjects.size() > 0) {
+                fedamb.externalObjects.sort(new QueueExternalObject.ExternalObjectComparator());
+                for(QueueExternalObject externalObject : fedamb.externalObjects) {
+                    switch (externalObject.getObjectType()) {
+                        case CASH_REGISTER:
+                            log("CASH_REGISTER");
+                            break;
+                        default:
+                            log("Undetected object.");
+                            break;
+                    }
+                }
+                fedamb.externalObjects.clear();
             }
 
             if(fedamb.grantedTime == timeToAdvance) {
@@ -138,12 +150,10 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
         // Register subscribe to Interaction joinClientToQueue
         int joinClientToQueueHandle = rtiamb.getInteractionClassHandle( ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME );
-        fedamb.joinClientToQueueHandle = joinClientToQueueHandle;
         rtiamb.subscribeInteractionClass( joinClientToQueueHandle );
 
         // Register subscribe to Interaction openNewCashRegisterHandle
         int openNewCashRegisterHandle = rtiamb.getInteractionClassHandle( ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
-        fedamb.openNewCashRegisterHandle = openNewCashRegisterHandle;
         rtiamb.subscribeInteractionClass( openNewCashRegisterHandle );
 
         // Register listening on cash register objects

@@ -8,12 +8,8 @@ import hla.tamplate.BaseAmbassador;
 import java.util.ArrayList;
 
 public class QueueAmbassador extends BaseAmbassador {
-    protected ArrayList<QueueExternalObject> externalObjects = new ArrayList<>();
-
-    protected int joinClientToQueueHandle = 0;
-    protected int openNewCashRegisterHandle = 2;
-
     protected ArrayList<QueueExternalEvent> externalEvents = new ArrayList<>();
+    protected ArrayList<QueueExternalObject> externalObjects = new ArrayList<>();
 
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,
@@ -28,28 +24,45 @@ public class QueueAmbassador extends BaseAmbassador {
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        StringBuilder builder = new StringBuilder( "Interaction Received:" );
-        if(interactionClass == joinClientToQueueHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new QueueExternalEvent(qty, QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
-                builder.append("JOIN_CLIENT_TO_QUEUE , time=" + time);
-                builder.append(" qty=").append(qty);
-                builder.append( "\n" );
+        String interactionName = "";
 
-            } catch (ArrayIndexOutOfBounds ignored) { }
+        try {
+            interactionName = rtiAmbassador.getInteractionClassName(interactionClass);
+        } catch (RTIinternalError | FederateNotExecutionMember | InteractionClassNotDefined rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
 
-        } else if (interactionClass == openNewCashRegisterHandle) {
-            try {
-                int qty = EncodingHelpers.decodeInt(theInteraction.getValue(0));
-                double time =  convertTime(theTime);
-                externalEvents.add(new QueueExternalEvent(qty, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
-                builder.append( "OPEN_NEW_CASH_REGISTER , time=" + time );
-                builder.append(" qty=").append(qty);
-                builder.append( "\n" );
+        StringBuilder builder = new StringBuilder( "Interaction Received: " );
+        double time =  convertTime(theTime);
 
-            } catch (ArrayIndexOutOfBounds ignored) { }
+        switch (interactionName) {
+            case ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new QueueExternalEvent(theInteraction, QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
+                    builder.append(QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CLIENT_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append(" " + ConfigConstants.AMOUNT_OF_ARTICLES_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(2)));
+                    builder.append( "\n" );
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                break;
+
+            case ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME:
+                try {
+                    externalEvents.add(new QueueExternalEvent(theInteraction, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
+                    builder.append(QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
+                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
+                    builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
+                    builder.append( "\n" );
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+                break;
+
+            default:
+                builder.append("Undetected interaction.");
         }
 
         log( builder.toString() );
@@ -97,6 +110,12 @@ public class QueueAmbassador extends BaseAmbassador {
 
     @Override
     public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) throws ObjectClassNotKnown, FederateInternalError {
-        System.out.println("Pojawil sie nowy obiekt typu SimObject " + theObject + " " + theObjectClass + " " + objectName);
+        String objName = "";
+        try {
+            objName = rtiAmbassador.getObjectClassName(rtiAmbassador.getObjectClass(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | ObjectClassNotDefined | ObjectNotKnown rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
+        System.out.println("Pojawil sie nowy obiekt typu SimObject: " + objName + ".");
     }
 }

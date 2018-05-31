@@ -1,16 +1,18 @@
 package hla.queue;
 
+import hla.rti.ReceivedInteraction;
+
 import java.util.Comparator;
 
 public class QueueExternalEvent {
     public enum EventType {JOIN_CLIENT_TO_QUEUE, OPEN_NEW_CASH_REGISTER}
 
-    private  int qty;
+    private ReceivedInteraction theAttributes;
     private EventType eventType;
     private Double time;
 
-    public QueueExternalEvent(int qty, EventType eventType, Double time) {
-        this.qty = qty;
+    public QueueExternalEvent(ReceivedInteraction theAttributes, EventType eventType, Double time) {
+        this.theAttributes = theAttributes;
         this.eventType = eventType;
         this.time = time;
     }
@@ -19,8 +21,8 @@ public class QueueExternalEvent {
         return eventType;
     }
 
-    public int getQty() {
-        return qty;
+    public ReceivedInteraction getAttributes() {
+        return theAttributes;
     }
 
     public double getTime() {
