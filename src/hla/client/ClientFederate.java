@@ -1,13 +1,18 @@
 package hla.client;
 
 import hla.constants.ConfigConstants;
+import hla.extend.object.Queue;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
 import hla.tamplate.BaseFederate;
 
+import java.util.ArrayList;
+
 public class ClientFederate extends BaseFederate<ClientAmbassador> {
     private final double timeStep           = 3.0;
+
+    private ArrayList<Queue> queueList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CLIENT_FED);
@@ -28,7 +33,11 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                 for(ClientExternalObject externalObject : fedamb.externalObjects) {
                     switch (externalObject.getObjectType()) {
                         case QUEUE:
-                            log("QUEUE");
+                            addToQueueList(
+                                    EncodingHelpers.decodeInt(externalObject.getAttributes().getValue(0)),
+                                    EncodingHelpers.decodeInt(externalObject.getAttributes().getValue(1)),
+                                    EncodingHelpers.decodeInt(externalObject.getAttributes().getValue(2))
+                            );
                             break;
                         default:
                             log("Undetected object.");
@@ -46,6 +55,24 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
             }
 
             rtiamb.tick();
+        }
+    }
+
+    private void addToQueueList(int numberQueue, int numberCashRegister, int length) {
+        // If Queue exist in queueList update length
+        boolean notExist = true;
+        for (Queue e: queueList) {
+            if(e.getNumberQueue() == numberQueue && e.getNumberCashRegister() == numberCashRegister) {
+                e.setLength(length);
+                notExist = false;
+                log("Update queue number=" + e.getNumberQueue() + ", length=" + e.getLength());
+                break;
+            }
+        }
+
+        if(notExist) {
+            queueList.add(new Queue(numberQueue, numberCashRegister, length));
+            log("Added new queue. Number=" + numberQueue + ", length=" + length);
         }
     }
 
