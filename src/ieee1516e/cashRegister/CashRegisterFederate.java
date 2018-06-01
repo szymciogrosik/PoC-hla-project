@@ -24,11 +24,10 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     private ParameterHandle cashRegisterNumberHandleStartHandlingClient;
     private ParameterHandle clientNumberHandleStartHandlingClient;
     private ParameterHandle amountOfArticlesHandleStartHandlingClient;
-    //Interaction join client to queue
-    private InteractionClassHandle joinClientToQueueHandle;
-    private ParameterHandle clientNumberHandleJoinClientToQueue;
-    private ParameterHandle queueNumberHandleJoinClientToQueue;
-    private ParameterHandle amountOfArticlesHandleJoinClientToQueue;
+    //Interaction open new cash register
+    private InteractionClassHandle openNewCashRegisterHandle;
+    private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
+    private ParameterHandle queueNumberHandleOpenNewCashRegister;
 
     private int cashRegisterNr              = 111;
     private boolean isFree                  = true;
@@ -65,12 +64,10 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
                             );
                             break;
                         case OPEN_NEW_CASH_REGISTER:
-                            log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr klienta: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue)) +
+                            log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
                                     ", Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue)) +
-                                    ", Liczba zakupow: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue))
+                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
                             );
                             break;
                         default:
@@ -115,12 +112,11 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         this.cashRegisterNumberHandleStartHandlingClient = rtiamb.getParameterHandle(this.startHandlingClientHandle, ConfigConstants.CASH_REGISTER_NUMBER_NAME);
         this.clientNumberHandleStartHandlingClient = rtiamb.getParameterHandle(this.startHandlingClientHandle, ConfigConstants.CLIENT_NUMBER_NAME);
         this.amountOfArticlesHandleStartHandlingClient = rtiamb.getParameterHandle(this.startHandlingClientHandle, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
-        //Interaction join client to queue
-        this.joinClientToQueueHandle = rtiamb.getInteractionClassHandle(ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME);
-        rtiamb.subscribeInteractionClass(joinClientToQueueHandle);
-        this.clientNumberHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.CLIENT_NUMBER_NAME);
-        this.queueNumberHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.QUEUE_NUMBER_NAME);
-        this.amountOfArticlesHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
+        //Interaction open new cash register
+        this.openNewCashRegisterHandle = rtiamb.getInteractionClassHandle(ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME);
+        rtiamb.subscribeInteractionClass(openNewCashRegisterHandle);
+        this.cashRegisterNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.CASH_REGISTER_NUMBER_NAME);
+        this.queueNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.QUEUE_NUMBER_NAME);
     }
 
     private void updateHLAObject(double time) throws RTIexception {
