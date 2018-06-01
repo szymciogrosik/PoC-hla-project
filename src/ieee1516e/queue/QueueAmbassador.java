@@ -49,17 +49,12 @@ public class QueueAmbassador extends BaseAmbassador {
             case ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME:
                 externalEvents.add(new QueueExternalEvent(theParameters, QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
                 builder.append(QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
-//                    builder.append(" " + ConfigConstants.CLIENT_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
-//                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
-//                    builder.append(" " + ConfigConstants.AMOUNT_OF_ARTICLES_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(2)));
                 builder.append( "\n" );
                 break;
 
             case ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME:
                 externalEvents.add(new QueueExternalEvent(theParameters, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
                 builder.append(QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
-//                builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(0)));
-//                builder.append(" " + ConfigConstants.QUEUE_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theInteraction.getValue(1)));
                 builder.append( "\n" );
                 break;
 
@@ -93,8 +88,8 @@ public class QueueAmbassador extends BaseAmbassador {
         double time =  convertTime(timeReceived);
 
         try {
-            objectName = rtiAmbassador.getObjectClassName((ObjectClassHandle) theObject);
-        } catch (RTIinternalError | FederateNotExecutionMember | InvalidObjectClassHandle | NotConnected rtIinternalError) {
+            objectName = rtiAmbassador.getObjectClassName(rtiAmbassador.getKnownObjectClassHandle(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | InvalidObjectClassHandle | NotConnected | ObjectInstanceNotKnown rtIinternalError) {
             rtIinternalError.printStackTrace();
             return;
         }
@@ -105,8 +100,6 @@ public class QueueAmbassador extends BaseAmbassador {
             case ConfigConstants.CASH_REGISTER_OBJ_NAME:
                 externalObjects.add(new QueueExternalObject(theAttributes, QueueExternalObject.ObjectType.CASH_REGISTER , time));
                 builder.append(QueueExternalObject.ObjectType.CASH_REGISTER + ", time=").append(time);
-//                    builder.append(" " + ConfigConstants.CASH_REGISTER_NUMBER_NAME + "=").append(EncodingHelpers.decodeInt(theAttributes.getValue(0)));
-//                    builder.append(" " + ConfigConstants.CASH_REGISTER_IS_FREE_NAME + "=").append(EncodingHelpers.decodeBoolean(theAttributes.getValue(1)));
                 builder.append("\n");
                 break;
 
@@ -123,9 +116,10 @@ public class QueueAmbassador extends BaseAmbassador {
                                         String objectName ) {
         String objName = "";
         try {
-            objName = rtiAmbassador.getObjectClassName((ObjectClassHandle) theObject);
-        } catch (RTIinternalError | FederateNotExecutionMember | InvalidObjectClassHandle | NotConnected rtIinternalError) {
+            objName = rtiAmbassador.getObjectClassName(rtiAmbassador.getKnownObjectClassHandle(theObject));
+        } catch (RTIinternalError | FederateNotExecutionMember | InvalidObjectClassHandle | NotConnected | ObjectInstanceNotKnown rtIinternalError) {
             rtIinternalError.printStackTrace();
+            return;
         }
         System.out.println("Pojawil sie nowy obiekt typu SimObject: " + objName + ".");
     }

@@ -8,7 +8,6 @@ import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
 public class QueueFederate extends BaseFederate<QueueAmbassador> {
-    private int queueHlaHandle;
     private final double timeStep           = 10.0;
 
     //Publish
@@ -189,7 +188,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         HLAinteger64BE cashRegisterNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 5 );
         HLAinteger64BE clientNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 1 );
         HLAinteger64BE amountOfArticlesStartHandlingClient = encoderFactory.createHLAinteger64BE( 15);
-        parametersStartHandlingClient.put(this.clientNumberHandleStartHandlingClient, queueNumberStartHandlingClient.toByteArray());
+        parametersStartHandlingClient.put(this.queueNumberHandleStartHandlingClient, queueNumberStartHandlingClient.toByteArray());
         parametersStartHandlingClient.put(this.cashRegisterNumberHandleStartHandlingClient, cashRegisterNumberStartHandlingClient.toByteArray());
         parametersStartHandlingClient.put(this.clientNumberHandleStartHandlingClient, clientNumberStartHandlingClient.toByteArray());
         parametersStartHandlingClient.put(this.amountOfArticlesHandleStartHandlingClient, amountOfArticlesStartHandlingClient.toByteArray());

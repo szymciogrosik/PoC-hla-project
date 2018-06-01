@@ -15,17 +15,17 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
     //Publish
     //Interaction join client to queue
-    private InteractionClassHandle joinClientToQueue;
-    private ParameterHandle clientNumber;
-    private ParameterHandle queueNumberClient;
-    private ParameterHandle amountOfArticlesClient;
+    private InteractionClassHandle joinClientToQueueHandle;
+    private ParameterHandle clientNumberHandleJoinClientToQueue;
+    private ParameterHandle queueNumberHandleJoinClientToQueue;
+    private ParameterHandle amountOfArticlesHandleJoinClientToQueue;
 
     //Subscribe
     //Object queue
     private ObjectClassHandle queueHandle;
     private AttributeHandle queueNumberQueue;
     private AttributeHandle cashRegisterQueue;
-    private AttributeHandle queueLenghtQueue;
+    private AttributeHandle queueLengthQueue;
 
     private ArrayList<Queue> queueList = new ArrayList<>();
 
@@ -54,7 +54,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                                     ", Nr kasy: " +
                                     decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)) +
                                     ", Dlugosc kolejki: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueLenghtQueue))
+                                    decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
                             );
                             break;
                         default:
@@ -95,39 +95,39 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
     }
 
     private void sendInteraction() throws RTIexception {
-        // Send Interaction joinClientToQueue
+        // Send Interaction joinClientToQueueHandle
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
         ParameterHandleValueMap parameters1 = rtiamb.getParameterHandleValueMapFactory().create(3);
         HLAinteger64BE clientNumberSend = encoderFactory.createHLAinteger64BE( 1 );
         HLAinteger64BE queueNumberClientSend = encoderFactory.createHLAinteger64BE( 5 );
         HLAinteger64BE ammountOfArticlesClientSend = encoderFactory.createHLAinteger64BE( 15);
 
-        parameters1.put(clientNumber, clientNumberSend.toByteArray());
-        parameters1.put(queueNumberClient, queueNumberClientSend.toByteArray());
-        parameters1.put(amountOfArticlesClient, ammountOfArticlesClientSend.toByteArray());
+        parameters1.put(clientNumberHandleJoinClientToQueue, clientNumberSend.toByteArray());
+        parameters1.put(queueNumberHandleJoinClientToQueue, queueNumberClientSend.toByteArray());
+        parameters1.put(amountOfArticlesHandleJoinClientToQueue, ammountOfArticlesClientSend.toByteArray());
 
-        rtiamb.sendInteraction(joinClientToQueue, parameters1, generateTag(), time);
+        rtiamb.sendInteraction(joinClientToQueueHandle, parameters1, generateTag(), time);
     }
 
     private void publishAndSubscribe() throws RTIexception {
         //Publish
-        //Interaction joinClientToQueue
-        this.joinClientToQueue = rtiamb.getInteractionClassHandle(ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME);
-        clientNumber = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.CLIENT_NUMBER_NAME);
-        queueNumberClient = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.QUEUE_NUMBER_NAME);
-        amountOfArticlesClient = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
-        rtiamb.publishInteractionClass(joinClientToQueue);
+        //Interaction joinClientToQueueHandle
+        this.joinClientToQueueHandle = rtiamb.getInteractionClassHandle(ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME);
+        clientNumberHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.CLIENT_NUMBER_NAME);
+        queueNumberHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.QUEUE_NUMBER_NAME);
+        amountOfArticlesHandleJoinClientToQueue = rtiamb.getParameterHandle(this.joinClientToQueueHandle, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
+        rtiamb.publishInteractionClass(joinClientToQueueHandle);
 
         //Subscribe
         //Queue object
         this.queueHandle = rtiamb.getObjectClassHandle(ConfigConstants.QUEUE_OBJ_NAME);
         this.queueNumberQueue = rtiamb.getAttributeHandle(this.queueHandle, ConfigConstants.QUEUE_NUMBER_NAME);
         this.cashRegisterQueue = rtiamb.getAttributeHandle(this.queueHandle, ConfigConstants.CASH_REGISTER_NUMBER_NAME);
-        this.queueLenghtQueue = rtiamb.getAttributeHandle(this.queueHandle, ConfigConstants.QUEUE_LENGTH_NAME);
+        this.queueLengthQueue = rtiamb.getAttributeHandle(this.queueHandle, ConfigConstants.QUEUE_LENGTH_NAME);
         AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
         attributes.add(this.queueNumberQueue);
         attributes.add(this.cashRegisterQueue);
-        attributes.add(this.queueLenghtQueue);
+        attributes.add(this.queueLengthQueue);
         rtiamb.subscribeObjectClassAttributes(queueHandle, attributes);
     }
 
