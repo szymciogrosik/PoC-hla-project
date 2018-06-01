@@ -15,17 +15,17 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
     //Publish
     //Interaction join client to queue
-    protected InteractionClassHandle joinClientToQueue;
-    protected ParameterHandle clientNumber;
-    protected ParameterHandle queueNumberClient;
-    protected ParameterHandle ammountOfArticlesClient;
+    private InteractionClassHandle joinClientToQueue;
+    private ParameterHandle clientNumber;
+    private ParameterHandle queueNumberClient;
+    private ParameterHandle amountOfArticlesClient;
 
     //Subscribe
     //Object queue
-    protected ObjectClassHandle queueHandle;
-    protected AttributeHandle queueNumberQueue;
-    protected AttributeHandle cashRegisterQueue;
-    protected AttributeHandle queueLenghtQueue;
+    private ObjectClassHandle queueHandle;
+    private AttributeHandle queueNumberQueue;
+    private AttributeHandle cashRegisterQueue;
+    private AttributeHandle queueLenghtQueue;
 
     private ArrayList<Queue> queueList = new ArrayList<>();
 
@@ -49,8 +49,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                 for(ClientExternalObject externalObject : fedamb.externalObjects) {
                     switch (externalObject.getObjectType()) {
                         case QUEUE:
-                            log("In case queue");
-                            System.out.println("Nr kolejki: " +
+                            log("In case object: queue | Nr kolejki: " +
                                     decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue)) +
                                     ", Nr kasy: " +
                                     decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)) +
@@ -105,18 +104,18 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
         parameters1.put(clientNumber, clientNumberSend.toByteArray());
         parameters1.put(queueNumberClient, queueNumberClientSend.toByteArray());
-        parameters1.put(ammountOfArticlesClient, ammountOfArticlesClientSend.toByteArray());
+        parameters1.put(amountOfArticlesClient, ammountOfArticlesClientSend.toByteArray());
 
         rtiamb.sendInteraction(joinClientToQueue, parameters1, generateTag(), time);
     }
 
-    protected void publishAndSubscribe() throws RTIexception {
+    private void publishAndSubscribe() throws RTIexception {
         //Publish
         //Interaction joinClientToQueue
         this.joinClientToQueue = rtiamb.getInteractionClassHandle(ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME);
         clientNumber = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.CLIENT_NUMBER_NAME);
         queueNumberClient = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.QUEUE_NUMBER_NAME);
-        ammountOfArticlesClient = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
+        amountOfArticlesClient = rtiamb.getParameterHandle(this.joinClientToQueue, ConfigConstants.AMOUNT_OF_ARTICLES_NAME);
         rtiamb.publishInteractionClass(joinClientToQueue);
 
         //Subscribe

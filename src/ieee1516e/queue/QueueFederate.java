@@ -66,13 +66,23 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 for(QueueExternalEvent externalEvent : fedamb.externalEvents) {
                     switch (externalEvent.getEventType()) {
                         case JOIN_CLIENT_TO_QUEUE:
-                            log("In case: JOIN_CLIENT_TO_QUEUE");
+                            log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue)) +
+                                    ", Nr kolejki: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue)) +
+                                    ", Liczba artykulow: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue))
+                            );
                             break;
                         case OPEN_NEW_CASH_REGISTER:
-                            log("In case: OPEN_NEW_CASH_REGISTER");
+                            log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
+                                    ", Nr kolejki: " +
+                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
+                            );
                             break;
                         default:
-                            log("In case: Undetected interaction.");
+                            log("In case interaction: Undetected interaction.");
                             break;
                     }
                 }
@@ -84,10 +94,14 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 for(QueueExternalObject externalObject : fedamb.externalObjects) {
                     switch (externalObject.getObjectType()) {
                         case CASH_REGISTER:
-                            log("In case: CASH_REGISTER");
+                            log("In case object: CASH_REGISTER | Nr kasy: " +
+                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister)) +
+                                    ", Czy wolna: " +
+                                    decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister))
+                            );
                             break;
                         default:
-                            log("In case: Undetected object.");
+                            log("In case object: Undetected object.");
                             break;
                     }
                 }
@@ -166,7 +180,6 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
         HLAfloat64Time logicalTime = timeFactory.makeTime(time);
         rtiamb.updateAttributeValues(queue, attributes, generateTag(), logicalTime);
-        log("update object");
     }
 
     private void sendInteraction() throws RTIexception {
