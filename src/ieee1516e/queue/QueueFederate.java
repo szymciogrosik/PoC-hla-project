@@ -13,37 +13,37 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
     //Publish
     //Interaction start handling client
-    protected InteractionClassHandle startHandlingClientHandle;
-    protected ParameterHandle queueNumberHandleStartHandlingClient;
-    protected ParameterHandle cashRegisterNumberHandleStartHandlingClient;
-    protected ParameterHandle clientNumberHandleStartHandlingClient;
-    protected ParameterHandle amountOfArticlesHandleStartHandlingClient;
+    private InteractionClassHandle startHandlingClientHandle;
+    private ParameterHandle queueNumberHandleStartHandlingClient;
+    private ParameterHandle cashRegisterNumberHandleStartHandlingClient;
+    private ParameterHandle clientNumberHandleStartHandlingClient;
+    private ParameterHandle amountOfArticlesHandleStartHandlingClient;
     //Object queue
-    protected ObjectClassHandle queueHandle;
-    protected AttributeHandle queueNumberHandleQueue;
-    protected AttributeHandle cashRegisterNumberHandleQueue;
-    protected AttributeHandle queueLengthHandleQueue;
+    private ObjectClassHandle queueHandle;
+    private AttributeHandle queueNumberHandleQueue;
+    private AttributeHandle cashRegisterNumberHandleQueue;
+    private AttributeHandle queueLengthHandleQueue;
 
     //Subscribe
     //Interaction join client to queue
-    protected InteractionClassHandle joinClientToQueueHandle;
-    protected ParameterHandle clientNumberHandleJoinClientToQueue;
-    protected ParameterHandle queueNumberHandleJoinClientToQueue;
-    protected ParameterHandle amountOfArticlesHandleJoinClientToQueue;
+    private InteractionClassHandle joinClientToQueueHandle;
+    private ParameterHandle clientNumberHandleJoinClientToQueue;
+    private ParameterHandle queueNumberHandleJoinClientToQueue;
+    private ParameterHandle amountOfArticlesHandleJoinClientToQueue;
     //Interaction open new cash register
-    protected InteractionClassHandle openNewCashRegisterHandle;
-    protected ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
-    protected ParameterHandle queueNumberHandleOpenNewCashRegister;
+    private InteractionClassHandle openNewCashRegisterHandle;
+    private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
+    private ParameterHandle queueNumberHandleOpenNewCashRegister;
     //Object cash register
-    protected ObjectClassHandle cashRegisterHandle;
-    protected AttributeHandle cashRegisterNumberHandleCashRegister;
-    protected AttributeHandle isFreeHandleCashRegister;
+    private ObjectClassHandle cashRegisterHandle;
+    private AttributeHandle cashRegisterNumberHandleCashRegister;
+    private AttributeHandle isFreeHandleCashRegister;
 
     private int queueNr                     = 44;
     private int cashRegisterNr              = 55;
     private int queueLengthNr               = 66;
 
-    ObjectInstanceHandle queue;
+    private ObjectInstanceHandle queue;
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.QUEUE_FED);
