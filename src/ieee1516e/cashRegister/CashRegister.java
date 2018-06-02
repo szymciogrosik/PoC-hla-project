@@ -1,19 +1,19 @@
 package ieee1516e.cashRegister;
 
 public class CashRegister {
-    private int numberCashRegister;
+    private long numberCashRegister;
     private boolean isFree;
 
-    public CashRegister(int numberCashRegister, boolean isFree) {
+    public CashRegister(long numberCashRegister, boolean isFree) {
         this.numberCashRegister = numberCashRegister;
         this.isFree = isFree;
     }
 
-    public int getNumberCashRegister() {
+    public long getNumberCashRegister() {
         return numberCashRegister;
     }
 
-    public void setNumberCashRegister(int numberCashRegister) {
+    public void setNumberCashRegister(long numberCashRegister) {
         this.numberCashRegister = numberCashRegister;
     }
 

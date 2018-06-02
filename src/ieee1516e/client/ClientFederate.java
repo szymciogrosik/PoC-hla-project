@@ -56,6 +56,11 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                                     ", Dlugosc kolejki: " +
                                     decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
                             );
+                            addToQueueList(
+                                    decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue)),
+                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)),
+                                    decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
+                            );
                             break;
                         default:
                             log("Undetected object.");
@@ -76,21 +81,21 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         }
     }
 
-    private void addToQueueList(int numberQueue, int numberCashRegister, int length) {
+    private void addToQueueList(long numberQueue, long numberCashRegister, long length) {
         // If Queue exist in queueList update length
         boolean notExist = true;
         for (Queue e: queueList) {
             if(e.getNumberQueue() == numberQueue && e.getNumberCashRegister() == numberCashRegister) {
                 e.setLength(length);
                 notExist = false;
-                log("Update queue number=" + e.getNumberQueue() + ", length=" + e.getLength());
+                log("Update queue. QueueNumber=" + e.getNumberQueue() + ", CashRegisterNumber=" + e.getNumberCashRegister() + ", length=" + e.getLength());
                 break;
             }
         }
 
         if(notExist) {
             queueList.add(new Queue(numberQueue, numberCashRegister, length));
-            log("Added new queue. Number=" + numberQueue + ", length=" + length);
+            log("Added new queue. QueueNumber=" + numberQueue + ", CashRegisterNumber=" + numberCashRegister + ", length=" + length);
         }
     }
 

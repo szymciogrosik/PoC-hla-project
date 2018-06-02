@@ -7,6 +7,8 @@ import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
+import java.util.ArrayList;
+
 public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private final double timeStep           = 10.0;
 
@@ -38,11 +40,11 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private AttributeHandle cashRegisterNumberHandleCashRegister;
     private AttributeHandle isFreeHandleCashRegister;
 
-    private int queueNr                     = 44;
-    private int cashRegisterNr              = 55;
-    private int queueLengthNr               = 66;
+    private long queueStartNr                     = 0;
+    private long cashRegisterStartNr              = 0;
+    private long queueLengthStartNr               = 0;
 
-    private ObjectInstanceHandle queue;
+    private ArrayList<Queue> queueList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.QUEUE_FED);
@@ -52,7 +54,12 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
         publishAndSubscribe();
         log("Published and Subscribed");
-        queue = registerStorageObject();
+        for(int i=0; i<ConfigConstants.START_ALL_QUEUES_NUMBER; i++) {
+            queueList.add(new Queue(registerStorageObject(), queueStartNr, cashRegisterStartNr, queueLengthStartNr));
+            log("Register queue object: QueueNumber=" + queueStartNr +", CashRegisterNumber=" + cashRegisterStartNr +", Length=" +queueLengthStartNr);
+            queueStartNr++;
+            cashRegisterStartNr++;
+        }
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
@@ -119,10 +126,6 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         }
     }
 
-    private void clientJoinedToQueue(int qty) {
-        queueNr++;
-    }
-
     private ObjectInstanceHandle registerStorageObject() throws RTIexception {
         return rtiamb.registerObjectInstance(queueHandle);
     }
@@ -170,18 +173,23 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     }
 
     private void updateHLAObject(double time) throws RTIexception {
-        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(3);
-        HLAinteger64BE queueNumber = encoderFactory.createHLAinteger64BE(queueNr);
-        attributes.put(this.queueNumberHandleQueue, queueNumber.toByteArray());
-        HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(cashRegisterNr);
-        attributes.put(this.cashRegisterNumberHandleQueue, cashRegisterNumber.toByteArray());
-        HLAinteger64BE queueLength = encoderFactory.createHLAinteger64BE(queueLengthNr);
-        attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
-        HLAfloat64Time logicalTime = timeFactory.makeTime(time);
-        rtiamb.updateAttributeValues(queue, attributes, generateTag(), logicalTime);
+        //Object queue
+        //Update all objects
+        for (Queue q : queueList) {
+            AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(3);
+            HLAinteger64BE queueNumber = encoderFactory.createHLAinteger64BE(q.getNumberQueue());
+            attributes.put(this.queueNumberHandleQueue, queueNumber.toByteArray());
+            HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(q.getNumberCashRegister());
+            attributes.put(this.cashRegisterNumberHandleQueue, cashRegisterNumber.toByteArray());
+            HLAinteger64BE queueLength = encoderFactory.createHLAinteger64BE(q.getLength());
+            attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
+            HLAfloat64Time logicalTime = timeFactory.makeTime(time);
+            rtiamb.updateAttributeValues(q.getObjectInstanceHandle(), attributes, generateTag(), logicalTime);
+        }
     }
 
     private void sendInteraction() throws RTIexception {
+        //Interaction start handling client
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
         ParameterHandleValueMap parametersStartHandlingClient = rtiamb.getParameterHandleValueMapFactory().create(4);
         HLAinteger64BE queueNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 5 );

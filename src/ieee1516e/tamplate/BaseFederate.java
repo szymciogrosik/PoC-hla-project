@@ -88,7 +88,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
     protected void tryCreateFederation() {
         try {
             URL[] modules = new URL[]{
-                    (new File("ShopFom.xml")).toURI().toURL()
+                    (new File(ConfigConstants.FEDERATION_FILE_PATH)).toURI().toURL()
             };
             rtiamb.createFederationExecution(ConfigConstants.FEDERATION_NAME, modules);
             log("Created Federation ");

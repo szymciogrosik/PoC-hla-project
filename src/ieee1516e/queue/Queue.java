@@ -1,37 +1,55 @@
 package ieee1516e.queue;
 
-public class Queue {
-    private int numberQueue;
-    private int numberCashRegister;
-    private int length;
+import hla.rti1516e.ObjectInstanceHandle;
 
-    public Queue(int numberQueue, int numberCashRegister, int length) {
+public class Queue {
+    private ObjectInstanceHandle objectInstanceHandle;
+    private long numberQueue;
+    private long numberCashRegister;
+    private long length;
+
+    public Queue(long numberQueue, long numberCashRegister, long length) {
         this.numberQueue = numberQueue;
         this.numberCashRegister = numberCashRegister;
         this.length = length;
     }
 
-    public int getNumberQueue() {
+    public Queue(ObjectInstanceHandle objectInstanceHandle, long numberQueue, long numberCashRegister, long length) {
+        this.objectInstanceHandle = objectInstanceHandle;
+        this.numberQueue = numberQueue;
+        this.numberCashRegister = numberCashRegister;
+        this.length = length;
+    }
+
+    public long getNumberQueue() {
         return numberQueue;
     }
 
-    public void setNumberQueue(int numberQueue) {
+    public void setNumberQueue(long numberQueue) {
         this.numberQueue = numberQueue;
     }
 
-    public int getNumberCashRegister() {
+    public long getNumberCashRegister() {
         return numberCashRegister;
     }
 
-    public void setNumberCashRegister(int numberCashRegister) {
+    public void setNumberCashRegister(long numberCashRegister) {
         this.numberCashRegister = numberCashRegister;
     }
 
-    public int getLength() {
+    public long getLength() {
         return length;
     }
 
-    public void setLength(int length) {
+    public void setLength(long length) {
         this.length = length;
+    }
+
+    public ObjectInstanceHandle getObjectInstanceHandle() {
+        return objectInstanceHandle;
+    }
+
+    public void setObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle) {
+        this.objectInstanceHandle = objectInstanceHandle;
     }
 }

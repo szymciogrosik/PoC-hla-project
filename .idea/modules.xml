@@ -3,6 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/HlaShopProject.iml" filepath="$PROJECT_DIR$/.idea/HlaShopProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project.iml" filepath="$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project_main.iml" filepath="$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project_main.iml" group="pl.wat.gross.hla.project" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project_test.iml" filepath="$PROJECT_DIR$/.idea/modules/pl.wat.gross.hla.project_test.iml" group="pl.wat.gross.hla.project" />
     </modules>
   </component>
 </project>
