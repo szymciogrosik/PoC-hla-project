@@ -1,15 +1,18 @@
 package ieee1516e.queue;
 
 import hla.rti1516e.ObjectInstanceHandle;
+import ieee1516e.client.Client;
+
+import java.util.LinkedList;
 
 public class Queue {
     private ObjectInstanceHandle objectInstanceHandle;
     private long numberQueue;
     private long numberCashRegister;
-    private long length;
+    private long length = 0;
+    private LinkedList<Client> clientList = new LinkedList<>();
 
     private boolean toUpdate = true;
-    private boolean toRegister = true;
 
     public Queue(long numberQueue, long numberCashRegister, long length) {
         this.numberQueue = numberQueue;
@@ -17,11 +20,10 @@ public class Queue {
         this.length = length;
     }
 
-    public Queue(ObjectInstanceHandle objectInstanceHandle, long numberQueue, long numberCashRegister, long length) {
+    public Queue(ObjectInstanceHandle objectInstanceHandle, long numberQueue, long numberCashRegister) {
         this.objectInstanceHandle = objectInstanceHandle;
         this.numberQueue = numberQueue;
         this.numberCashRegister = numberCashRegister;
-        this.length = length;
     }
 
     public long getNumberQueue() {
@@ -44,31 +46,44 @@ public class Queue {
         return length;
     }
 
-    public void setLength(long length) {
-        this.length = length;
-    }
-
     public ObjectInstanceHandle getObjectInstanceHandle() {
         return objectInstanceHandle;
     }
 
     public void setObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle) {
         this.objectInstanceHandle = objectInstanceHandle;
+        setToUpdate(true);
     }
 
     public boolean isToUpdate() {
         return toUpdate;
     }
 
-    public void setToUpdate(boolean toUpdate) {
+    private void setToUpdate(boolean toUpdate) {
         this.toUpdate = toUpdate;
     }
 
-    public boolean isToRegister() {
-        return toRegister;
+    public void addClientToQueue(Client newClient) {
+        setToUpdate(true);
+        clientList.add(newClient);
+        length ++;
     }
 
-    public void setToRegister(boolean toRegister) {
-        this.toRegister = toRegister;
+    public Client getFirstClient() {
+        setToUpdate(true);
+        length --;
+        return clientList.removeFirst();
+    }
+
+    public void setLength(long length) {
+        this.length = length;
+    }
+
+    public LinkedList<Client> getClientList() {
+        return clientList;
+    }
+
+    public void setClientList(LinkedList<Client> clientList) {
+        this.clientList = clientList;
     }
 }

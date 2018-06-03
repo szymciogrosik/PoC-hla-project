@@ -28,6 +28,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
     private AttributeHandle queueLengthQueue;
 
     private ArrayList<Queue> queueList = new ArrayList<>();
+    private long clientNumber = 0;
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CLIENT_FED);
@@ -42,25 +43,23 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
             double timeToAdvance = fedamb.federateTime + timeStep;
             advanceTime(timeStep);
 
-            sendInteraction();
-
             if(fedamb.externalObjects.size() > 0) {
                 fedamb.externalObjects.sort(new ClientExternalObject.ExternalObjectComparator());
                 for(ClientExternalObject externalObject : fedamb.externalObjects) {
                     switch (externalObject.getObjectType()) {
                         case QUEUE:
+                            long queueNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue));
+                            long cashRegisterNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue));
+                            long queueLengthDecoded = decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue));
                             log("In case object: QUEUE | Nr kolejki: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue)) +
+                                    queueNumberDecoded +
                                     ", Nr kasy: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)) +
+                                    cashRegisterNumberDecoded +
                                     ", Dlugosc kolejki: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
+                                    queueLengthDecoded
                             );
-                            addToQueueList(
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue)),
-                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)),
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
-                            );
+
+                            addToQueueList(queueNumberDecoded, cashRegisterNumberDecoded, queueLengthDecoded);
                             break;
                         default:
                             log("Undetected object.");
@@ -70,14 +69,32 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                 fedamb.externalObjects.clear();
             }
 
+            sendInteractionJoinToQueue();
+
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
                 log("Updating client time: " + timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
-//            waitForUser();
             }
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+        }
+    }
+
+    private void sendInteractionJoinToQueue() throws RTIexception {
+        //Find queue
+        Queue queueToJoin = null;
+        long lengthQueueToJoin = Integer.MAX_VALUE;
+        for (Queue q : queueList) {
+            if(q.getLength() < lengthQueueToJoin) {
+                lengthQueueToJoin = q.getLength();
+                queueToJoin = q;
+            }
+        }
+
+        if(queueToJoin != null) {
+            sendInteraction(clientNumber, queueToJoin.getNumberQueue(), 10);
+            clientNumber++;
         }
     }
 
@@ -99,17 +116,17 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         }
     }
 
-    private void sendInteraction() throws RTIexception {
+    private void sendInteraction(long clientNumber, long queueNumberClient, long amountOfArticlesClient) throws RTIexception {
         // Send Interaction joinClientToQueueHandle
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
         ParameterHandleValueMap parameters1 = rtiamb.getParameterHandleValueMapFactory().create(3);
-        HLAinteger64BE clientNumberSend = encoderFactory.createHLAinteger64BE( 1 );
-        HLAinteger64BE queueNumberClientSend = encoderFactory.createHLAinteger64BE( 5 );
-        HLAinteger64BE ammountOfArticlesClientSend = encoderFactory.createHLAinteger64BE( 15);
+        HLAinteger64BE clientNumberSend = encoderFactory.createHLAinteger64BE( clientNumber );
+        HLAinteger64BE queueNumberClientSend = encoderFactory.createHLAinteger64BE( queueNumberClient );
+        HLAinteger64BE amountOfArticlesClientSend = encoderFactory.createHLAinteger64BE( amountOfArticlesClient);
 
         parameters1.put(clientNumberHandleJoinClientToQueue, clientNumberSend.toByteArray());
         parameters1.put(queueNumberHandleJoinClientToQueue, queueNumberClientSend.toByteArray());
-        parameters1.put(amountOfArticlesHandleJoinClientToQueue, ammountOfArticlesClientSend.toByteArray());
+        parameters1.put(amountOfArticlesHandleJoinClientToQueue, amountOfArticlesClientSend.toByteArray());
 
         rtiamb.sendInteraction(joinClientToQueueHandle, parameters1, generateTag(), time);
     }

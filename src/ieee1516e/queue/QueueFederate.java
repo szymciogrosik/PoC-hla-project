@@ -5,13 +5,14 @@ import hla.rti1516e.encoding.HLAinteger64BE;
 import hla.rti1516e.exceptions.RTIexception;
 import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.cashRegister.CashRegister;
+import ieee1516e.client.Client;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
 import java.util.ArrayList;
 
 public class QueueFederate extends BaseFederate<QueueAmbassador> {
-    private final double timeStep           = 10.0;
+    private final double timeStep           = 1.0;
 
     //Publish
     //Interaction start handling client
@@ -56,33 +57,74 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
         publishAndSubscribe();
         log("Published and Subscribed");
-        for(int i = 0; i<ConfigConstants.START_ALL_CASH_REGISTER_NUMBER; i++) {
-            queueList.add(new Queue(registerStorageObject(), queueStartNr, cashRegisterStartNr, queueLengthStartNr));
-            log("Register queue object: QueueNumber=" + queueStartNr +", CashRegisterNumber=" + cashRegisterStartNr +", Length=" +queueLengthStartNr);
-            queueStartNr++;
-            cashRegisterStartNr++;
-        }
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
             advanceTime(timeStep);
 
-            sendInteraction();
+            if(fedamb.externalObjects.size() > 0) {
+                fedamb.externalObjects.sort(new QueueExternalObject.ExternalObjectComparator());
+                for(QueueExternalObject externalObject : fedamb.externalObjects) {
+                    switch (externalObject.getObjectType()) {
+                        case CASH_REGISTER:
+                            long cashRegisterNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister));
+                            boolean isFreeDecoded = decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister));
+                            log("In case object: CASH_REGISTER | Nr kasy: " +
+                                    cashRegisterNumberDecoded +
+                                    ", Czy wolna: " +
+                                    isFreeDecoded
+                            );
+
+                            // Jeżeli nie istnieje w liście kolejek taka kolejka z nr kasy to zarejestruj nową kolejkę i dodaj kasę to listy kas, jeśli istnieje zrób update na kasie
+                            boolean notExist = true;
+                            for (CashRegister cR : cashRegisterList) {
+                                if(cR.getNumberCashRegister() == cashRegisterNumberDecoded) {
+                                    cR.setFree(isFreeDecoded);
+                                    cR.setToUpdate(true);
+                                    notExist = false;
+                                    break;
+                                }
+                            }
+
+                            if(notExist) {
+                                cashRegisterList.add(new CashRegister(cashRegisterNumberDecoded, isFreeDecoded));
+                                registerNewQueue(cashRegisterNumberDecoded);
+                            }
+
+                            break;
+                        default:
+                            log("In case object: Undetected object.");
+                            break;
+                    }
+                }
+                fedamb.externalObjects.clear();
+            }
 
             if(fedamb.externalEvents.size() > 0) {
                 fedamb.externalEvents.sort(new QueueExternalEvent.ExternalEventComparator());
                 for(QueueExternalEvent externalEvent : fedamb.externalEvents) {
                     switch (externalEvent.getEventType()) {
                         case JOIN_CLIENT_TO_QUEUE:
+                            long clientNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue));
+                            long queueNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue));
+                            long articlesAmountDecoded = decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue));
                             log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue)) +
+                                    clientNumberDecoded +
                                     ", Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue)) +
+                                    queueNumberDecoded +
                                     ", Liczba artykulow: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue))
+                                    articlesAmountDecoded
                             );
+
+                            for (Queue q : queueList) {
+                                if(q.getNumberQueue() == queueNumberDecoded) {
+                                    q.addClientToQueue(new Client(clientNumberDecoded, articlesAmountDecoded));
+                                    break;
+                                }
+                            }
                             break;
                         case OPEN_NEW_CASH_REGISTER:
+                            //Todo: właściwie niepotrzebna bo kiedy otworzymy nową kasę kolejka i tak doda nową kolejkę
                             log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
                                     decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
                                     ", Nr kolejki: " +
@@ -97,31 +139,13 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 fedamb.externalEvents.clear();
             }
 
-            if(fedamb.externalObjects.size() > 0) {
-                fedamb.externalObjects.sort(new QueueExternalObject.ExternalObjectComparator());
-                for(QueueExternalObject externalObject : fedamb.externalObjects) {
-                    switch (externalObject.getObjectType()) {
-                        case CASH_REGISTER:
-                            log("In case object: CASH_REGISTER | Nr kasy: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister)) +
-                                    ", Czy wolna: " +
-                                    decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister))
-                            );
-                            // Jeżeli nie istnieje w liście kolejek taka kolejka z nr kasy to zarejestruj nową kolejkę i dodaj kasę to listy kas, jeśli istnieje zrób update na kasie
-
-                            break;
-                        default:
-                            log("In case object: Undetected object.");
-                            break;
-                    }
-                }
-                fedamb.externalObjects.clear();
-            }
+            //Send interaction startHandlingClients
+            sendInteractionsStartHandlingClients();
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
                 log("Updating queue at time: " + timeToAdvance);
-                updateHLAObject(timeToAdvance);
+                updateHLAObjects(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
 
@@ -129,8 +153,32 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         }
     }
 
-    private void registerNewQueue() throws RTIexception {
-        registerStorageObject();
+    private void sendInteractionsStartHandlingClients() throws RTIexception {
+        //Send interaction startHandlingClient
+        for (CashRegister cR : cashRegisterList) {
+            if(cR.isFree()) {
+                //Find queue pass to cashRegister
+                Queue queue = null;
+                for (Queue q : queueList) {
+                    if(q.getNumberCashRegister() == cR.getNumberCashRegister()) {
+                        queue = q;
+                        break;
+                    }
+                }
+
+                if (queueList.get(queueList.indexOf(queue)).getClientList().size() > 0) {
+                    Client clientToSend = queueList.get(queueList.indexOf(queue)).getFirstClient();
+                    sendInteraction(queue.getNumberQueue(), cR.getNumberCashRegister(), clientToSend.getNumber(), clientToSend.getAmountOfArticles());
+                    cR.setFree(false);
+                }
+            }
+        }
+    }
+
+
+    private void registerNewQueue(long cashRegisterNumber) throws RTIexception {
+        queueList.add(new Queue(registerStorageObject(), cashRegisterNumber, cashRegisterNumber));
+        log("Register queue object: QueueNumber=" + cashRegisterNumber +", CashRegisterNumber=" + cashRegisterNumber +", Length=" +queueLengthStartNr);
     }
 
     private ObjectInstanceHandle registerStorageObject() throws RTIexception {
@@ -179,30 +227,31 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         this.queueNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.QUEUE_NUMBER_NAME);
     }
 
-    private void updateHLAObject(double time) throws RTIexception {
+    private void updateHLAObjects(double time) throws RTIexception {
         //Object queue
-        //Update all objects
         for (Queue q : queueList) {
-            AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(3);
-            HLAinteger64BE queueNumber = encoderFactory.createHLAinteger64BE(q.getNumberQueue());
-            attributes.put(this.queueNumberHandleQueue, queueNumber.toByteArray());
-            HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(q.getNumberCashRegister());
-            attributes.put(this.cashRegisterNumberHandleQueue, cashRegisterNumber.toByteArray());
-            HLAinteger64BE queueLength = encoderFactory.createHLAinteger64BE(q.getLength());
-            attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
-            HLAfloat64Time logicalTime = timeFactory.makeTime(time);
-            rtiamb.updateAttributeValues(q.getObjectInstanceHandle(), attributes, generateTag(), logicalTime);
+            if(q.isToUpdate()) {
+                AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(3);
+                HLAinteger64BE queueNumber = encoderFactory.createHLAinteger64BE(q.getNumberQueue());
+                attributes.put(this.queueNumberHandleQueue, queueNumber.toByteArray());
+                HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(q.getNumberCashRegister());
+                attributes.put(this.cashRegisterNumberHandleQueue, cashRegisterNumber.toByteArray());
+                HLAinteger64BE queueLength = encoderFactory.createHLAinteger64BE(q.getLength());
+                attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
+                HLAfloat64Time logicalTime = timeFactory.makeTime(time);
+                rtiamb.updateAttributeValues(q.getObjectInstanceHandle(), attributes, generateTag(), logicalTime);
+            }
         }
     }
 
-    private void sendInteraction() throws RTIexception {
+    private void sendInteraction(long queueNumber, long cashRegisterNumber, long clientNumber, long amountOfArticlesNumber) throws RTIexception {
         //Interaction start handling client
         HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
         ParameterHandleValueMap parametersStartHandlingClient = rtiamb.getParameterHandleValueMapFactory().create(4);
-        HLAinteger64BE queueNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 5 );
-        HLAinteger64BE cashRegisterNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 5 );
-        HLAinteger64BE clientNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( 1 );
-        HLAinteger64BE amountOfArticlesStartHandlingClient = encoderFactory.createHLAinteger64BE( 15);
+        HLAinteger64BE queueNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( queueNumber );
+        HLAinteger64BE cashRegisterNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( cashRegisterNumber );
+        HLAinteger64BE clientNumberStartHandlingClient = encoderFactory.createHLAinteger64BE( clientNumber );
+        HLAinteger64BE amountOfArticlesStartHandlingClient = encoderFactory.createHLAinteger64BE( amountOfArticlesNumber);
         parametersStartHandlingClient.put(this.queueNumberHandleStartHandlingClient, queueNumberStartHandlingClient.toByteArray());
         parametersStartHandlingClient.put(this.cashRegisterNumberHandleStartHandlingClient, cashRegisterNumberStartHandlingClient.toByteArray());
         parametersStartHandlingClient.put(this.clientNumberHandleStartHandlingClient, clientNumberStartHandlingClient.toByteArray());
