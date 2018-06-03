@@ -4,6 +4,7 @@ import hla.rti1516e.*;
 import hla.rti1516e.encoding.HLAinteger64BE;
 import hla.rti1516e.exceptions.RTIexception;
 import hla.rti1516e.time.HLAfloat64Time;
+import ieee1516e.cashRegister.CashRegister;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
@@ -45,6 +46,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private long queueLengthStartNr               = 0;
 
     private ArrayList<Queue> queueList = new ArrayList<>();
+    private ArrayList<CashRegister> cashRegisterList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.QUEUE_FED);
@@ -54,7 +56,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
         publishAndSubscribe();
         log("Published and Subscribed");
-        for(int i=0; i<ConfigConstants.START_ALL_QUEUES_NUMBER; i++) {
+        for(int i = 0; i<ConfigConstants.START_ALL_CASH_REGISTER_NUMBER; i++) {
             queueList.add(new Queue(registerStorageObject(), queueStartNr, cashRegisterStartNr, queueLengthStartNr));
             log("Register queue object: QueueNumber=" + queueStartNr +", CashRegisterNumber=" + cashRegisterStartNr +", Length=" +queueLengthStartNr);
             queueStartNr++;
@@ -105,6 +107,8 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                                     ", Czy wolna: " +
                                     decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister))
                             );
+                            // Jeżeli nie istnieje w liście kolejek taka kolejka z nr kasy to zarejestruj nową kolejkę i dodaj kasę to listy kas, jeśli istnieje zrób update na kasie
+
                             break;
                         default:
                             log("In case object: Undetected object.");
@@ -119,11 +123,14 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 log("Updating queue at time: " + timeToAdvance);
                 updateHLAObject(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
-//                waitForUser(ConfigConstants.QUEUE_FED);
             }
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
+    }
+
+    private void registerNewQueue() throws RTIexception {
+        registerStorageObject();
     }
 
     private ObjectInstanceHandle registerStorageObject() throws RTIexception {

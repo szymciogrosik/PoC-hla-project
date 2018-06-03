@@ -8,6 +8,8 @@ import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
+import java.util.ArrayList;
+
 public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     private final double timeStep           = 5.0;
 
@@ -29,9 +31,9 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
     private ParameterHandle queueNumberHandleOpenNewCashRegister;
 
-    private int cashRegisterNr              = 111;
-    private boolean isFree                  = true;
-    private ObjectInstanceHandle cashRegister;
+    private int cashRegisterStartNr = 0;
+    private boolean isFreeStartFlag = true;
+    private ArrayList<CashRegister> cashRegisterList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CASH_REGISTER_FED);
@@ -41,8 +43,9 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
 
         publishAndSubscribe();
         log("Published and Subscribed");
-        cashRegister = registerStorageObject();
-        log("Registered Object");
+        for (int i=0; i<ConfigConstants.START_ALL_CASH_REGISTER_NUMBER; i++) {
+            registerNewCashRegister();
+        }
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
@@ -69,6 +72,7 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
                                     ", Nr kolejki: " +
                                     decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
                             );
+                            registerNewCashRegister();
                             break;
                         default:
                             log("Undetected interaction.");
@@ -80,13 +84,18 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
-                log("Updating cash register at time: " + timeToAdvance);
-                updateHLAObject(timeToAdvance);
+                updateHLAObjects(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
+    }
+
+    private void registerNewCashRegister() throws RTIexception {
+        cashRegisterList.add(new CashRegister(registerStorageObject(), cashRegisterStartNr, isFreeStartFlag));
+        log("Register cashRegister object: CashRegister=" + cashRegisterStartNr +", isFree=" + isFreeStartFlag);
+        cashRegisterStartNr++;
     }
 
     private ObjectInstanceHandle registerStorageObject() throws RTIexception {
@@ -119,14 +128,20 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         this.queueNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.QUEUE_NUMBER_NAME);
     }
 
-    private void updateHLAObject(double time) throws RTIexception {
-        AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
-        HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(cashRegisterNr);
-        attributes.put(this.cashRegisterNumberHandleCashRegister, cashRegisterNumber.toByteArray());
-        HLAboolean isFreeToSend = encoderFactory.createHLAboolean(isFree);
-        attributes.put(this.isFreeHandleCashRegister, isFreeToSend.toByteArray());
-        HLAfloat64Time logicalTime = timeFactory.makeTime(time);
-        rtiamb.updateAttributeValues(cashRegister, attributes, generateTag(), logicalTime);
+    private void updateHLAObjects(double time) throws RTIexception {
+        for (CashRegister cR : cashRegisterList) {
+            if(cR.isToUpdate()) {
+                AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(2);
+                HLAinteger64BE cashRegisterNumber = encoderFactory.createHLAinteger64BE(cR.getNumberCashRegister());
+                attributes.put(this.cashRegisterNumberHandleCashRegister, cashRegisterNumber.toByteArray());
+                HLAboolean isFreeToSend = encoderFactory.createHLAboolean(cR.isFree());
+                attributes.put(this.isFreeHandleCashRegister, isFreeToSend.toByteArray());
+                HLAfloat64Time logicalTime = timeFactory.makeTime(time);
+                rtiamb.updateAttributeValues(cR.getObjectInstanceHandle(), attributes, generateTag(), logicalTime);
+                cR.setToUpdate(false);
+                log("Update cashRegister object: CashRegisterNumber=" + cR.getNumberCashRegister() +", isFree=" + cR.isFree() + ", at time= " + time);
+            }
+        }
     }
 
     public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {

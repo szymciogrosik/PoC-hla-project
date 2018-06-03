@@ -1,7 +1,8 @@
 package ieee1516e.constants;
 
 public class ConfigConstants {
-    public static final int START_ALL_QUEUES_NUMBER =   4;
+    public static final int START_ALL_CASH_REGISTER_NUMBER =    4;
+    public static final int MAX_CLIENTS_NUMBER_IN_QUEUES =      10;
 
     public static final String READY_TO_RUN =           "ReadyToRun";
     public static final String FEDERATION_FILE_PATH =   "ShopFom.xml";

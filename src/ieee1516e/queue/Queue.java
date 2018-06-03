@@ -8,6 +8,9 @@ public class Queue {
     private long numberCashRegister;
     private long length;
 
+    private boolean toUpdate = true;
+    private boolean toRegister = true;
+
     public Queue(long numberQueue, long numberCashRegister, long length) {
         this.numberQueue = numberQueue;
         this.numberCashRegister = numberCashRegister;
@@ -51,5 +54,21 @@ public class Queue {
 
     public void setObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle) {
         this.objectInstanceHandle = objectInstanceHandle;
+    }
+
+    public boolean isToUpdate() {
+        return toUpdate;
+    }
+
+    public void setToUpdate(boolean toUpdate) {
+        this.toUpdate = toUpdate;
+    }
+
+    public boolean isToRegister() {
+        return toRegister;
+    }
+
+    public void setToRegister(boolean toRegister) {
+        this.toRegister = toRegister;
     }
 }
