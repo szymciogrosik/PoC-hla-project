@@ -59,7 +59,7 @@ public class Queue {
         return toUpdate;
     }
 
-    private void setToUpdate(boolean toUpdate) {
+    public void setToUpdate(boolean toUpdate) {
         this.toUpdate = toUpdate;
     }
 

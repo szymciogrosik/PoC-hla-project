@@ -103,8 +103,9 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
                 fedamb.externalObjects.clear();
             }
 
-            if(isClientsToMany())
+            if(isClientsToMany()) {
                 sendInteractionOpenNewCashRegister();
+            }
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
@@ -145,7 +146,14 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
                 queueNumberToSend = q.getNumberQueue();
         }
 
-        sendInteraction(cashRegisterNumberToSend + 1, queueNumberToSend + 1);
+        cashRegisterNumberToSend++;
+        queueNumberToSend++;
+
+        sendInteraction(cashRegisterNumberToSend, queueNumberToSend);
+
+        //Add to Manager queue list and cashRegister list one of queue and cashRegister because send to many interactions.
+        queueList.add(new Queue(queueNumberToSend, cashRegisterNumberToSend, 0));
+        cashRegistersList.add(new CashRegister(cashRegisterNumberToSend, true));
     }
 
     private void sendInteraction(long cashRegisterNumber, long queueNumber) throws RTIexception {

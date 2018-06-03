@@ -11,7 +11,7 @@ import ieee1516e.tamplate.BaseFederate;
 import java.util.ArrayList;
 
 public class ClientFederate extends BaseFederate<ClientAmbassador> {
-    private final double timeStep           = 3.0;
+    private final double timeStep           = 1.0;
 
     //Publish
     //Interaction join client to queue

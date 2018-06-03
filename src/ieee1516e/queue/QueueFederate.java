@@ -240,6 +240,8 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 attributes.put(this.queueLengthHandleQueue, queueLength.toByteArray());
                 HLAfloat64Time logicalTime = timeFactory.makeTime(time);
                 rtiamb.updateAttributeValues(q.getObjectInstanceHandle(), attributes, generateTag(), logicalTime);
+                q.setToUpdate(false);
+                log("Update queue object: queueNumber=" + q.getNumberQueue() +", cashRegisterNumber=" + q.getNumberCashRegister() + ", length=" + q.getLength() +  ", at time= " + time);
             }
         }
     }
