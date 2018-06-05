@@ -127,7 +127,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
     // Waiting for sync from RTI
     protected void advanceTime(double timestep) throws RTIexception
     {
-        log("requesting time advance for: " + (fedamb.federateTime + timestep));
+        log("Requesting time advance for: " + (fedamb.federateTime + timestep));
         // request the advance
         fedamb.isAdvancing = true;
         HLAfloat64Time newTime = timeFactory.makeTime( fedamb.federateTime + timestep );

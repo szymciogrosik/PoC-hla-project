@@ -5,13 +5,14 @@ import hla.rti1516e.encoding.HLAboolean;
 import hla.rti1516e.encoding.HLAinteger64BE;
 import hla.rti1516e.exceptions.RTIexception;
 import hla.rti1516e.time.HLAfloat64Time;
+import ieee1516e.client.Client;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
 import java.util.ArrayList;
 
 public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
-    private final double timeStep           = 5.0;
+    private final double timeStep           = 1.0;
 
     //Publish
     //Object cash register
@@ -31,9 +32,10 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
     private ParameterHandle queueNumberHandleOpenNewCashRegister;
 
-    private int cashRegisterStartNr = 0;
     private boolean isFreeStartFlag = true;
+
     private ArrayList<CashRegister> cashRegisterList = new ArrayList<>();
+    private ArrayList<Client> handlingClientList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CASH_REGISTER_FED);
@@ -44,10 +46,26 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         publishAndSubscribe();
         log("Published and Subscribed");
         for (int i=0; i<ConfigConstants.START_ALL_CASH_REGISTER_NUMBER; i++) {
-            registerNewCashRegister();
+            registerNewCashRegister(i);
         }
 
         while (fedamb.running) {
+            //Check, any cashRegister should be open yet?
+            for (Client c : handlingClientList) {
+                if(c.getTimeToEndHandling() <= fedamb.federateTime) {
+                    for (CashRegister cR : cashRegisterList) {
+                        if(cR.getNumberCashRegister() == c.getCashRegisterNumber()) {
+                            cR.setFree(true);
+                            cR.setToUpdate(true);
+                            break;
+                        }
+                    }
+                    log("Klient: " + c.getNumber() +" opuścił kasę nr: " + c.getCashRegisterNumber() + ", o czasie: " +fedamb.federateTime);
+                    handlingClientList.remove(c);
+                    break;
+                }
+            }
+
             double timeToAdvance = fedamb.federateTime + timeStep;
             advanceTime(timeStep);
 
@@ -56,23 +74,37 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
                 for(CashRegisterExternalEvent externalEvent : fedamb.externalEvents) {
                     switch (externalEvent.getEventType()) {
                         case START_HANDLING_CLIENT:
+                            long queueNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleStartHandlingClient));
+                            long cashRegisterNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleStartHandlingClient));
+                            long clientNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleStartHandlingClient));
+                            long amountOfArticlesDecoded = decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleStartHandlingClient));
                             log("In case interaction: START_HANDLING_CLIENT | Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleStartHandlingClient)) +
+                                    queueNumberDecoded +
                                     ", Nr kasy: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleStartHandlingClient)) +
+                                    cashRegisterNumberDecoded +
                                     ", Nr klienta: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleStartHandlingClient))+
+                                    clientNumberDecoded+
                                     ", Liczba zakupow: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleStartHandlingClient))
+                                    amountOfArticlesDecoded
                             );
+
+                            double timeHandlingClientInCashRegister = fedamb.federateTime + amountOfArticlesDecoded * ConfigConstants.CASH_REGISTER_TIME_TO_SCAN_ONE_ARTICLE;
+                            handlingClientList.add(new Client(
+                                        clientNumberDecoded,
+                                        amountOfArticlesDecoded,
+                                        timeHandlingClientInCashRegister,
+                                        cashRegisterNumberDecoded
+                                    ));
                             break;
                         case OPEN_NEW_CASH_REGISTER:
+                            long cashRegisterNumberDecoded2 = decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister));
+                            long queueNumberDecoded2 = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister));
                             log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
+                                    cashRegisterNumberDecoded2 +
                                     ", Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
+                                    queueNumberDecoded2
                             );
-                            registerNewCashRegister();
+                            registerNewCashRegister(cashRegisterNumberDecoded2);
                             break;
                         default:
                             log("Undetected interaction.");
@@ -92,10 +124,9 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         }
     }
 
-    private void registerNewCashRegister() throws RTIexception {
-        cashRegisterList.add(new CashRegister(registerStorageObject(), cashRegisterStartNr, isFreeStartFlag));
-        log("Register cashRegister object: CashRegister=" + cashRegisterStartNr +", isFree=" + isFreeStartFlag);
-        cashRegisterStartNr++;
+    private void registerNewCashRegister(long cahsRegisterNumber) throws RTIexception {
+        cashRegisterList.add(new CashRegister(registerStorageObject(), cahsRegisterNumber, isFreeStartFlag));
+        log("Register cashRegister object: CashRegister=" + cahsRegisterNumber +", isFree=" + isFreeStartFlag);
     }
 
     private ObjectInstanceHandle registerStorageObject() throws RTIexception {

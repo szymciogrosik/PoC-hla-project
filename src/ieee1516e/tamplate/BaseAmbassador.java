@@ -23,6 +23,7 @@ public abstract class BaseAmbassador extends NullFederateAmbassador {
     {
         this.grantedTime = convertTime( theTime );
         this.isAdvancing = false;
+        log("Update federate time: " + (grantedTime));
     }
 
     protected double convertTime(LogicalTime logicalTime)
