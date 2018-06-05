@@ -1,6 +1,8 @@
 package ieee1516e.constants;
 
 public class ConfigConstants {
+    // If SIMULATION_TIME == 0, simulation never end
+    public static final long SIMULATION_TIME                            = 100;
     public static final int START_ALL_CASH_REGISTER_NUMBER              = 4;
     public static final int MAX_CLIENTS_NUMBER_IN_QUEUES                = 10;
     public static final double CASH_REGISTER_TIME_TO_SCAN_ONE_ARTICLE   = 1;
@@ -31,4 +33,5 @@ public class ConfigConstants {
     public static final String JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME = INTERACTION_ROOT_NAME + "Dolaczenie_klienta_do_kolejki";
     public static final String START_HANDLING_CLIENT_INTERACTION_NAME = INTERACTION_ROOT_NAME + "Rozpocznij_obsluge_klienta";
     public static final String OPEN_NEW_CASH_REGISTER_INTERACTION_NAME = INTERACTION_ROOT_NAME + "Otworz_nowa_kase";
+    public static final String END_SIMULATION_INTERACTION_NAME = INTERACTION_ROOT_NAME + "Zakoncz_symulacje";
 }

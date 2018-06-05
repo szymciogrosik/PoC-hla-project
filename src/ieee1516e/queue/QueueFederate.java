@@ -37,6 +37,8 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private InteractionClassHandle openNewCashRegisterHandle;
     private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
     private ParameterHandle queueNumberHandleOpenNewCashRegister;
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
     //Object cash register
     private ObjectClassHandle cashRegisterHandle;
     private AttributeHandle cashRegisterNumberHandleCashRegister;
@@ -131,6 +133,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                                     decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
                             );
                             break;
+
                         default:
                             log("In case interaction: Undetected interaction.");
                             break;
@@ -150,6 +153,12 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
             }
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+        }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -226,6 +235,9 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
         rtiamb.subscribeInteractionClass(openNewCashRegisterHandle);
         this.cashRegisterNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.CASH_REGISTER_NUMBER_NAME);
         this.queueNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.QUEUE_NUMBER_NAME);
+        //Interaction open new cash register
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.subscribeInteractionClass(endSimulationHandle);
     }
 
     private void updateHLAObjects(double time) throws RTIexception {

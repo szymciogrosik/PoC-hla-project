@@ -2,11 +2,16 @@ package ieee1516e.statistic;
 
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.RTIexception;
+import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseFederate;
 
 public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
     private final double timeStep           = 1.0;
+
+    //Publish
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
 
     //Subscribe
     //Object queue
@@ -108,11 +113,35 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
                 fedamb.federateTime = timeToAdvance;
             }
 
+            if(ConfigConstants.SIMULATION_TIME < fedamb.federateTime && ConfigConstants.SIMULATION_TIME != 0) {
+                sendInteractionEndSimulation();
+            }
+
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+        }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
+    private void sendInteractionEndSimulation() throws RTIexception {
+        // Send Interaction endSimulation
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
+        ParameterHandleValueMap parameters1 = rtiamb.getParameterHandleValueMapFactory().create(0);
+        rtiamb.sendInteraction(endSimulationHandle, parameters1, generateTag(), time);
+        log("SEND Interaction END_SIMULATION");
+        fedamb.running = false;
+    }
+
     private void publishAndSubscribe() throws RTIexception {
+        //Publish
+        //Interaction endSimulation
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.publishInteractionClass(endSimulationHandle);
+
         //Subscribe
         //Object cash register
         this.cashRegisterHandle = rtiamb.getObjectClassHandle(ConfigConstants.CASH_REGISTER_OBJ_NAME);

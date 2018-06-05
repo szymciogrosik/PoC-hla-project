@@ -55,6 +55,12 @@ public class CashRegisterAmbassador extends BaseAmbassador {
                 builder.append( "\n" );
                 break;
 
+            case ConfigConstants.END_SIMULATION_INTERACTION_NAME:
+                builder.append("END_SIMULATION" + ", time=").append(time);
+                builder.append( "\n" );
+                this.running = false;
+                break;
+
             default:
                 builder.append("Undetected interaction.");
         }

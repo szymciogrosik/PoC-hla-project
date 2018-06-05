@@ -161,16 +161,16 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         return federateName;
     }
 
-    public void setFederateName(String federateName) {
+    protected void setFederateName(String federateName) {
         this.federateName = federateName;
     }
 
-    private void resign() throws Exception {
+    protected void resign() throws Exception {
         rtiamb.resignFederationExecution(ResignAction.DELETE_OBJECTS);
         log("Resigned from Federation");
 
         try {
-            rtiamb.destroyFederationExecution("federation");
+            rtiamb.destroyFederationExecution(ConfigConstants.FEDERATION_NAME);
             log("Destroyed Federation");
         } catch (FederationExecutionDoesNotExist dne) {
             log("No need to destroy federation, it doesn't exist");

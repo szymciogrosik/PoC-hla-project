@@ -30,6 +30,8 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
     private ObjectClassHandle cashRegisterHandle;
     private AttributeHandle cashRegisterNumberHandleCashRegister;
     private AttributeHandle isFreeHandleCashRegister;
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
 
     private ArrayList<CashRegister> cashRegistersList = new ArrayList<>();
     private ArrayList<Queue> queueList = new ArrayList<>();
@@ -115,6 +117,12 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean isClientsToMany() {
@@ -195,6 +203,9 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
         attributes.add(this.cashRegisterQueue);
         attributes.add(this.queueLengthQueue);
         rtiamb.subscribeObjectClassAttributes(queueHandle, attributes);
+        //Interaction open new cash register
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.subscribeInteractionClass(endSimulationHandle);
     }
 
     public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {

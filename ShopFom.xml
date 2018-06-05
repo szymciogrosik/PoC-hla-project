@@ -177,6 +177,14 @@
                         dataType="HLAinteger64BE"
                         semantics="Numer kolejki." />
             </interactionClass>
+            <interactionClass
+                    name="Zakoncz_symulacje"
+                    sharing="PublishSubscribe"
+                    dimensions="NA"
+                    transportation="HLAreliable"
+                    order="Receive"
+                    semantics="Interakcja konczaca dzialanie symulacji">
+            </interactionClass>
         </interactionClass>
     </interactions>
 </objectModel>

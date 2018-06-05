@@ -31,6 +31,8 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
     private InteractionClassHandle openNewCashRegisterHandle;
     private ParameterHandle cashRegisterNumberHandleOpenNewCashRegister;
     private ParameterHandle queueNumberHandleOpenNewCashRegister;
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
 
     private boolean isFreeStartFlag = true;
 
@@ -123,6 +125,12 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void registerNewCashRegister(long cahsRegisterNumber) throws RTIexception {
@@ -158,6 +166,9 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
         rtiamb.subscribeInteractionClass(openNewCashRegisterHandle);
         this.cashRegisterNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.CASH_REGISTER_NUMBER_NAME);
         this.queueNumberHandleOpenNewCashRegister = rtiamb.getParameterHandle(this.openNewCashRegisterHandle, ConfigConstants.QUEUE_NUMBER_NAME);
+        //Interaction open new cash register
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.subscribeInteractionClass(endSimulationHandle);
     }
 
     private void updateHLAObjects(double time) throws RTIexception {

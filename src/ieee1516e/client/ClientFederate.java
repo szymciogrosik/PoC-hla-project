@@ -27,6 +27,8 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
     private AttributeHandle queueNumberQueue;
     private AttributeHandle cashRegisterQueue;
     private AttributeHandle queueLengthQueue;
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
 
     private ArrayList<Queue> queueList = new ArrayList<>();
     private long clientNumber = 0;
@@ -85,6 +87,12 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
             }
 
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
+        }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -160,6 +168,9 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         attributes.add(this.cashRegisterQueue);
         attributes.add(this.queueLengthQueue);
         rtiamb.subscribeObjectClassAttributes(queueHandle, attributes);
+        //Interaction open new cash register
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.subscribeInteractionClass(endSimulationHandle);
     }
 
     public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
