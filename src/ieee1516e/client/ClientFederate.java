@@ -9,6 +9,7 @@ import ieee1516e.queue.Queue;
 import ieee1516e.tamplate.BaseFederate;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class ClientFederate extends BaseFederate<ClientAmbassador> {
     private final double timeStep           = 1.0;
@@ -29,6 +30,9 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
     private ArrayList<Queue> queueList = new ArrayList<>();
     private long clientNumber = 0;
+
+    private Random generator = new Random();
+    private double randomTimeToSendClient = generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_SPOWN);
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CLIENT_FED);
@@ -69,7 +73,10 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                 fedamb.externalObjects.clear();
             }
 
-            sendInteractionJoinToQueue();
+            if(fedamb.federateTime >= randomTimeToSendClient) {
+                sendInteractionJoinToQueue();
+                randomTimeToSendClient = fedamb.federateTime + generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_SPOWN);
+            }
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
@@ -93,8 +100,10 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
         }
 
         if(queueToJoin != null) {
-            sendInteraction(clientNumber, queueToJoin.getNumberQueue(), 10);
+            long amountOfArticles =  generator.nextInt(ConfigConstants.CLIENT_MAX_AMOUNT_OF_ARTICLES);
+            sendInteraction(clientNumber, queueToJoin.getNumberQueue(), amountOfArticles);
             clientNumber++;
+            log("SEND interaction JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME. Client nr: "+clientNumber + ", queue nr: "+queueToJoin.getNumberQueue()+", amountOfArticles: "+amountOfArticles);
         }
     }
 

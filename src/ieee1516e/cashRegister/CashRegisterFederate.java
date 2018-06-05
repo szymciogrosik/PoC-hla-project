@@ -116,6 +116,7 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
 
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
+                log("Updating cash register time: " + timeToAdvance);
                 updateHLAObjects(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }

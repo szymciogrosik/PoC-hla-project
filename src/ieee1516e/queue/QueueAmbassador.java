@@ -40,8 +40,6 @@ public class QueueAmbassador extends BaseAmbassador {
             invalidInteractionClassHandle.printStackTrace();
         }
 
-        log("Nazwa interakcji" + interactionName );
-
         StringBuilder builder = new StringBuilder( "Interaction Received: " );
         double time =  convertTime(timeReceived);
 

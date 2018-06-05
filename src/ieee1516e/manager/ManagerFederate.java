@@ -150,6 +150,7 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
         queueNumberToSend++;
 
         sendInteraction(cashRegisterNumberToSend, queueNumberToSend);
+        log("SEND interaction OPEN_NEW_CASH_REGISTER. CashRegister nr: "+cashRegisterNumberToSend + ", Queue nr: "+queueNumberToSend);
 
         //Add to Manager queue list and cashRegister list one of queue and cashRegister because send to many interactions.
         queueList.add(new Queue(queueNumberToSend, cashRegisterNumberToSend, 0));

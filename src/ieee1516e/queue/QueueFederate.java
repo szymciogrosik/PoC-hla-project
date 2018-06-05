@@ -170,6 +170,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                     Client clientToSend = queueList.get(queueList.indexOf(queue)).getFirstClient();
                     sendInteraction(queue.getNumberQueue(), cR.getNumberCashRegister(), clientToSend.getNumber(), clientToSend.getAmountOfArticles());
                     cR.setFree(false);
+                    log("SEND interaction START_HANDLING_CLIENT. Queue nr: "+queue.getNumberQueue() + ", client nr: "+clientToSend.getNumber()+", amountOfArticles: "+clientToSend.getAmountOfArticles());
                 }
             }
         }
