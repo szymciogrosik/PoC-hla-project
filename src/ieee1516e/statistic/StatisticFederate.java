@@ -4,6 +4,7 @@ import hla.rti1516e.*;
 import hla.rti1516e.exceptions.RTIexception;
 import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.constants.ConfigConstants;
+import ieee1516e.statistic.service.SaveToFileService;
 import ieee1516e.statistic.statisticObjects.StatisticCashRegister;
 import ieee1516e.statistic.statisticObjects.StatisticClient;
 import ieee1516e.statistic.statisticObjects.StatisticQueue;
@@ -12,6 +13,8 @@ import ptolemy.plot.Plot;
 import ptolemy.plot.PlotApplication;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
     private final double timeStep           = 1.0;
@@ -45,6 +48,7 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
     private ArrayList<StatisticQueue> queueListAvgTimeWaitingInQueueTemp = new ArrayList<>();
     private ArrayList<AvgTimeWaitingInQueue> queueListAvgTimeWaitingInQueueFinally = new ArrayList<>();
     private ArrayList<StatisticCashRegister> cashRegisterListMaxHandlingClient = new ArrayList<>();
+    private ArrayList<ClientHandlingByCashRegister> clientHandlingByCashRegisterList = new ArrayList<>();
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.STATISTIC_FED);
@@ -238,8 +242,11 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             e.printStackTrace();
         }
 
+        SaveToFileService writer = new SaveToFileService();
+        writer.writeToNewFile("Statystyki dla symulacji Sklepu:\n");
         //------------------------------------------------------------------------------------------
         //Statistic avg time waiting client in queue.
+        writer.writeToExistingFile("Sredni czas przebywania klienta w kolejce:");
         for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
             double avgWaitingInQueue;
             double waitingInQueueTime = 0;
@@ -255,22 +262,31 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             avgWaitingInQueue = waitingInQueueTime/clientsNumber;
             System.out.println("Srednia długość oczekiwania dla kolejki: " + avgWaitingInQueue);
             queueListAvgTimeWaitingInQueueFinally.add(new AvgTimeWaitingInQueue(q.getQueueNumber(), avgWaitingInQueue));
+            writer.writeToExistingFile("Dla kolejki nr: "+q.getQueueNumber() +", wynosi: "+avgWaitingInQueue+".");
         }
         //------------------------------------------------------------------------------------------
 
         //------------------------------------------------------------------------------------------
         //Avg length queue for cashRegister
+        writer.writeToExistingFile("\nSrednia długość kolejki dla kasy: ");
         for (StatisticQueue sQ : queueListAvgTimeWaitingInQueueTemp) {
             System.out.println("Dla kasy: "+sQ.getQueueNumber());
             System.out.println(sQ.getLengthSum() + " , " + sQ.getCounter());
             System.out.println(sQ.getLengthSum()/sQ.getCounter());
+            writer.writeToExistingFile("Dla kasy nr: "+sQ.getQueueNumber() + ", wynosi: "+(sQ.getLengthSum()/sQ.getCounter())+".");
         }
         //------------------------------------------------------------------------------------------
 
         //------------------------------------------------------------------------------------------
         //Handling clients from cashRegister
+        writer.writeToExistingFile("\nLiczba obsłużonych klientów dla każdej z kas w przedziale czasu <"+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE +":"+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE+">wynosi:");
         for (StatisticCashRegister cR : cashRegisterListMaxHandlingClient) {
             System.out.println("Dla kasy: " + cR.getCashRegisterNumber() + ", obsłużono: "+cR.getHandlingClientsCounter()+", w przedziale czasu od: "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE+" do "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE);
+            clientHandlingByCashRegisterList.add(new ClientHandlingByCashRegister(cR.getCashRegisterNumber() + 0.0, cR.getHandlingClientsCounter()));
+        }
+        Collections.sort(clientHandlingByCashRegisterList,(a, b)->a.clientHandlingNumber.compareTo(b.cashRegisterNumber));
+        for (ClientHandlingByCashRegister cH : clientHandlingByCashRegisterList) {
+            writer.writeToExistingFile("Dla kasy nr: "+cH.getCashRegisterNumber() + ", wynosi: "+cH.getClientHandlingNumber()+".");
         }
         //------------------------------------------------------------------------------------------
 
@@ -419,6 +435,24 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
 
         public double getAvgTime() {
             return avgTime;
+        }
+    }
+
+    private class ClientHandlingByCashRegister {
+        private Double cashRegisterNumber = 0.0;
+        private Double clientHandlingNumber = 0.0;
+
+        public ClientHandlingByCashRegister(Double cashRegisterNumber, Double clientHandlingNumber) {
+            this.cashRegisterNumber = cashRegisterNumber;
+            this.clientHandlingNumber = clientHandlingNumber;
+        }
+
+        public Double getCashRegisterNumber() {
+            return cashRegisterNumber;
+        }
+
+        public Double getClientHandlingNumber() {
+            return clientHandlingNumber;
         }
     }
 }
