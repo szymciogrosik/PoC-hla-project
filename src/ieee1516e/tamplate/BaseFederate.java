@@ -103,27 +103,6 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         }
     }
 
-    protected double randomTime() {
-        Random r = new Random();
-        return 1 +(4 * r.nextDouble());
-    }
-
-    //Todo: nie wiadomo czy ok.
-    protected LogicalTime convertTime(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTime( time );
-    }
-
-    /**
-     * Same as for {@link #convertTime(double)}
-     */
-    protected LogicalTimeInterval convertInterval(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTimeInterval( time );
-    }
-
     // Waiting for sync from RTI
     protected void advanceTime(double timestep) throws RTIexception
     {
@@ -155,10 +134,6 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         {
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
-    }
-
-    public String getFederateName() {
-        return federateName;
     }
 
     protected void setFederateName(String federateName) {
