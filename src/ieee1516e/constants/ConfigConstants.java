@@ -3,11 +3,14 @@ package ieee1516e.constants;
 public class ConfigConstants {
     // If SIMULATION_TIME == 0, simulation never end
     public static final long SIMULATION_TIME                            = 100;
-    public static final int START_ALL_CASH_REGISTER_NUMBER              = 4;
+    public static final int START_ALL_CASH_REGISTER_NUMBER              = 1;
     public static final int MAX_CLIENTS_NUMBER_IN_QUEUES                = 10;
     public static final double CASH_REGISTER_TIME_TO_SCAN_ONE_ARTICLE   = 1;
     public static final int CLIENT_MAX_AMOUNT_OF_ARTICLES               = 10;
     public static final int CLIENT_MAX_TIME_TO_SPOWN                    = 5;
+
+    public static final double STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE = 0;
+    public static final double STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE   = 100;
 
     public static final String READY_TO_RUN                             = "ReadyToRun";
     public static final String FEDERATION_FILE_PATH                     = "ShopFom.xml";
