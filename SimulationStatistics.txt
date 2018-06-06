@@ -1,0 +1,13 @@
+Statystyki dla symulacji Sklepu:
+
+Sredni czas przebywania klienta w kolejce:
+Dla kolejki nr: 0, wynosi: 40.6.
+Dla kolejki nr: 1, wynosi: 18.533333333333335.
+
+Srednia długość kolejki dla kasy: 
+Dla kasy nr: 0, wynosi: 7.877551020408164.
+Dla kasy nr: 1, wynosi: 4.592592592592593.
+
+Liczba obsłużonych klientów dla każdej z kas w przedziale czasu <0.0:100.0>wynosi:
+Dla kasy nr: 0.0, wynosi: 10.0.
+Dla kasy nr: 1.0, wynosi: 5.0.

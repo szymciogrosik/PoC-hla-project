@@ -2,11 +2,26 @@ package ieee1516e.statistic;
 
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.RTIexception;
+import hla.rti1516e.time.HLAfloat64Time;
 import ieee1516e.constants.ConfigConstants;
+import ieee1516e.statistic.service.SaveToFileService;
+import ieee1516e.statistic.statisticObjects.StatisticCashRegister;
+import ieee1516e.statistic.statisticObjects.StatisticClient;
+import ieee1516e.statistic.statisticObjects.StatisticQueue;
 import ieee1516e.tamplate.BaseFederate;
+import ptolemy.plot.Plot;
+import ptolemy.plot.PlotApplication;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
     private final double timeStep           = 1.0;
+
+    //Publish
+    //Interaction end simulation
+    private InteractionClassHandle endSimulationHandle;
 
     //Subscribe
     //Object queue
@@ -30,6 +45,11 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
     private ParameterHandle queueNumberHandleJoinClientToQueue;
     private ParameterHandle amountOfArticlesHandleJoinClientToQueue;
 
+    private ArrayList<StatisticQueue> queueListAvgTimeWaitingInQueueTemp = new ArrayList<>();
+    private ArrayList<AvgTimeWaitingInQueue> queueListAvgTimeWaitingInQueueFinally = new ArrayList<>();
+    private ArrayList<StatisticCashRegister> cashRegisterListMaxHandlingClient = new ArrayList<>();
+    private ArrayList<ClientHandlingByCashRegister> clientHandlingByCashRegisterList = new ArrayList<>();
+
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.STATISTIC_FED);
 
@@ -42,57 +62,72 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             double timeToAdvance = fedamb.federateTime + timeStep;
             advanceTime(timeStep);
 
-            if(fedamb.externalEvents.size() > 0) {
-                fedamb.externalEvents.sort(new StatisticExternalEvent.ExternalEventComparator());
-                for(StatisticExternalEvent externalEvent : fedamb.externalEvents) {
-                    switch (externalEvent.getEventType()) {
-                        case JOIN_CLIENT_TO_QUEUE:
-                            log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue)) +
-                                    ", Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue)) +
-                                    ", Liczba artykulow: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue))
-                            );
-                            break;
-                        case START_HANDLING_CLIENT:
-                            log("In case interaction: START_HANDLING_CLIENT | Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleStartHandlingClient)) +
-                                    ", Nr kasy: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleStartHandlingClient)) +
-                                    ", Nr klienta: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleStartHandlingClient))+
-                                    ", Liczba zakupow: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleStartHandlingClient))
-                            );
-                            break;
-                        default:
-                            log("Undetected interaction.");
-                            break;
-                    }
-                }
-                fedamb.externalEvents.clear();
-            }
-
             if(fedamb.externalObjects.size() > 0) {
                 fedamb.externalObjects.sort(new StatisticExternalObject.ExternalObjectComparator());
                 for(StatisticExternalObject externalObject : fedamb.externalObjects) {
                     switch (externalObject.getObjectType()) {
                         case QUEUE:
+                            long queueNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue));
+                            long cashRegisterDecoded = decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue));
+                            long queueLengthDecoded = decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue));
+
                             log("In case object: QUEUE | Nr kolejki: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueNumberQueue)) +
+                                    queueNumberDecoded +
                                     ", Nr kasy: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterQueue)) +
+                                    cashRegisterDecoded +
                                     ", Dlugosc kolejki: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.queueLengthQueue))
+                                    queueLengthDecoded
                             );
+
+                            boolean notExist = true;
+
+                            //------------------------------------------------------------------------------------------
+                            //Statistic avg time waiting client in queue.
+                            // &
+                            //Avg length queue for cashRegister
+                            //If queue in this number doesn't exist add new
+                            for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+                                if(q.getQueueNumber() == queueNumberDecoded) {
+                                    q.setActualLength(queueLengthDecoded);
+                                    notExist = false;
+                                    break;
+                                }
+                            }
+                            if(notExist) {
+                                StatisticQueue sQ = new StatisticQueue(queueNumberDecoded);
+                                sQ.setActualLength(queueLengthDecoded);
+                                queueListAvgTimeWaitingInQueueTemp.add(sQ);
+                            }
+                            //------------------------------------------------------------------------------------------
+
                             break;
                         case CASH_REGISTER:
+                            long cashRegisterNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister));
+                            boolean isFreeDecoded = decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister));
+
                             log("In case object: CASH_REGISTER | Nr kasy: " +
-                                    decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister)) +
+                                    cashRegisterNumberDecoded+
                                     ", Czy wolna: " +
-                                    decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister))
+                                    isFreeDecoded
                             );
+
+                            //------------------------------------------------------------------------------------------
+                            //Handling clients from cashRegister
+                            boolean notExist2 = true;
+                            if(externalObject.getTime()>=ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE
+                                    && externalObject.getTime()<=ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE) {
+                                for (StatisticCashRegister cR : cashRegisterListMaxHandlingClient) {
+                                    if (cR.getCashRegisterNumber() == cashRegisterNumberDecoded) {
+                                        if (isFreeDecoded)
+                                            cR.incrementHandlingClientsCounter();
+                                        notExist2 = false;
+                                        break;
+                                    }
+                                }
+                                if (notExist2)
+                                    cashRegisterListMaxHandlingClient.add(new StatisticCashRegister(cashRegisterNumberDecoded));
+                                //------------------------------------------------------------------------------------------
+                            }
                             break;
                         default:
                             log("Undetected object.");
@@ -102,17 +137,188 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
                 fedamb.externalObjects.clear();
             }
 
+            if(fedamb.externalEvents.size() > 0) {
+                fedamb.externalEvents.sort(new StatisticExternalEvent.ExternalEventComparator());
+                for(StatisticExternalEvent externalEvent : fedamb.externalEvents) {
+                    switch (externalEvent.getEventType()) {
+                        case JOIN_CLIENT_TO_QUEUE:
+                            long clientNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue));
+                            long queueNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue));
+                            long amountOfArticles = decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue));
+
+                            log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
+                                    clientNumberDecoded +
+                                    ", Nr kolejki: " +
+                                    queueNumberDecoded +
+                                    ", Liczba artykulow: " +
+                                    amountOfArticles
+                            );
+
+                            //------------------------------------------------------------------------------------------
+                            //Statistic avg time waiting client in queue.
+                            //Check if client is in queue, if not add new client.
+                            for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+                                if(q.getQueueNumber() == queueNumberDecoded) {
+                                    boolean clientNotExist = true;
+                                    for (StatisticClient sC : q.getStatisticClientsList()) {
+                                        if(sC.getClientNumber() == clientNumberDecoded) {
+                                            sC.setJoinToQueue(externalEvent.getTime());
+                                            clientNotExist = false;
+                                            break;
+                                        }
+                                    }
+                                    if(clientNotExist)
+                                        q.getStatisticClientsList().add(new StatisticClient(clientNumberDecoded, externalEvent.getTime(), externalEvent.getTime()));
+                                    break;
+                                }
+                            }
+                            //------------------------------------------------------------------------------------------
+
+                            break;
+
+                        case START_HANDLING_CLIENT:
+                            long queueNumberDecoded2 = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleStartHandlingClient));
+                            long cashRegisterNumber2 = decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleStartHandlingClient));
+                            long clientNumberDecoded2 = decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleStartHandlingClient));
+                            long amountOfArticles2 = decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleStartHandlingClient));
+
+                            log("In case interaction: START_HANDLING_CLIENT | Nr kolejki: " +
+                                    queueNumberDecoded2 +
+                                    ", Nr kasy: " +
+                                    cashRegisterNumber2 +
+                                    ", Nr klienta: " +
+                                    clientNumberDecoded2+
+                                    ", Liczba zakupow: " +
+                                    amountOfArticles2
+                            );
+
+                            //Check if client is in queue and update time exit queue.
+                            for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+                                if(q.getQueueNumber() == queueNumberDecoded2) {
+                                    for (StatisticClient sC : q.getStatisticClientsList()) {
+                                        if(sC.getClientNumber() == clientNumberDecoded2) {
+                                            sC.setExitQueue(externalEvent.getTime());
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            log("Undetected interaction.");
+                            break;
+                    }
+                }
+                fedamb.externalEvents.clear();
+            }
+
+            //Avg length queue for cashRegister
+            //Length queue in time
+            for (StatisticQueue sQ : queueListAvgTimeWaitingInQueueTemp) {
+                sQ.setCounter(sQ.getCounter()+1);
+                sQ.setLengthSum(sQ.getLengthSum() + sQ.getActualLength());
+                sQ.addToLengthInTime(fedamb.federateTime, sQ.getActualLength());
+            }
+
             if(fedamb.grantedTime == timeToAdvance) {
                 timeToAdvance += fedamb.federateLookahead;
                 log("Updating statistic time: " + timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
 
+            if(ConfigConstants.SIMULATION_TIME < fedamb.federateTime && ConfigConstants.SIMULATION_TIME != 0) {
+                sendInteractionEndSimulation();
+            }
+
             rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
+
+        try {
+            resign();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        SaveToFileService writer = new SaveToFileService();
+        writer.writeToNewFile("Statystyki dla symulacji Sklepu:\n");
+        //------------------------------------------------------------------------------------------
+        //Statistic avg time waiting client in queue.
+        writer.writeToExistingFile("Sredni czas przebywania klienta w kolejce:");
+        for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+            double avgWaitingInQueue;
+            double waitingInQueueTime = 0;
+            double clientsNumber = 0;
+            System.out.println("Dla kolejki: "+q.getQueueNumber());
+            for (StatisticClient c : q.getStatisticClientsList()) {
+                if(c.getExitQueue() == c.getJoinToQueue())
+                    c.setExitQueue(fedamb.federateTime);
+                waitingInQueueTime = waitingInQueueTime + (c.getExitQueue() - c.getJoinToQueue());
+                clientsNumber++;
+                System.out.println("Nr klienta: " + c.getClientNumber() + ", Join: " + c.getJoinToQueue() + ", Exit: " + c.getExitQueue());
+            }
+            avgWaitingInQueue = waitingInQueueTime/clientsNumber;
+            System.out.println("Srednia długość oczekiwania dla kolejki: " + avgWaitingInQueue);
+            queueListAvgTimeWaitingInQueueFinally.add(new AvgTimeWaitingInQueue(q.getQueueNumber(), avgWaitingInQueue));
+            writer.writeToExistingFile("Dla kolejki nr: "+q.getQueueNumber() +", wynosi: "+avgWaitingInQueue+".");
+        }
+        //------------------------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------------------------
+        //Avg length queue for cashRegister
+        writer.writeToExistingFile("\nSrednia długość kolejki dla kasy: ");
+        for (StatisticQueue sQ : queueListAvgTimeWaitingInQueueTemp) {
+            System.out.println("Dla kasy: "+sQ.getQueueNumber());
+            System.out.println(sQ.getLengthSum() + " , " + sQ.getCounter());
+            System.out.println(sQ.getLengthSum()/sQ.getCounter());
+            writer.writeToExistingFile("Dla kasy nr: "+sQ.getQueueNumber() + ", wynosi: "+(sQ.getLengthSum()/sQ.getCounter())+".");
+        }
+        //------------------------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------------------------
+        //Handling clients from cashRegister
+        writer.writeToExistingFile("\nLiczba obsłużonych klientów dla każdej z kas w przedziale czasu <"+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE +":"+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE+">wynosi:");
+        for (StatisticCashRegister cR : cashRegisterListMaxHandlingClient) {
+            System.out.println("Dla kasy: " + cR.getCashRegisterNumber() + ", obsłużono: "+cR.getHandlingClientsCounter()+", w przedziale czasu od: "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE+" do "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE);
+            clientHandlingByCashRegisterList.add(new ClientHandlingByCashRegister(cR.getCashRegisterNumber() + 0.0, cR.getHandlingClientsCounter()));
+        }
+        Collections.sort(clientHandlingByCashRegisterList,(a, b)->a.clientHandlingNumber.compareTo(b.cashRegisterNumber));
+        for (ClientHandlingByCashRegister cH : clientHandlingByCashRegisterList) {
+            writer.writeToExistingFile("Dla kasy nr: "+cH.getCashRegisterNumber() + ", wynosi: "+cH.getClientHandlingNumber()+".");
+        }
+        //------------------------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------------------------
+        //Queue length in time
+        //Plot
+        printPlotsQueueLengthFromTime();
+        printOnePlotQueuesLengthFromTime();
+        //------------------------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------------------------
+        //Avg time waiting in queue
+        //Plot
+        printPlotAvgTimeWaitingInQueue();
+        //------------------------------------------------------------------------------------------
+    }
+
+    private void sendInteractionEndSimulation() throws RTIexception {
+        // Send Interaction endSimulation
+        HLAfloat64Time time = timeFactory.makeTime(fedamb.federateTime + timeStep + fedamb.federateLookahead);
+        ParameterHandleValueMap parameters1 = rtiamb.getParameterHandleValueMapFactory().create(0);
+        rtiamb.sendInteraction(endSimulationHandle, parameters1, generateTag(), time);
+        log("SEND Interaction END_SIMULATION");
+        fedamb.running = false;
     }
 
     private void publishAndSubscribe() throws RTIexception {
+        //Publish
+        //Interaction endSimulation
+        this.endSimulationHandle = rtiamb.getInteractionClassHandle(ConfigConstants.END_SIMULATION_INTERACTION_NAME);
+        rtiamb.publishInteractionClass(endSimulationHandle);
+
         //Subscribe
         //Object cash register
         this.cashRegisterHandle = rtiamb.getObjectClassHandle(ConfigConstants.CASH_REGISTER_OBJ_NAME);
@@ -148,13 +354,105 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
 
     }
 
-
-
     public static void main(String[] args) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         try {
             new StatisticFederate().runFederate();
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
+        }
+    }
+
+    private void printPlotsQueueLengthFromTime() {
+        for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+            Plot myPlot = new Plot();
+            myPlot.setTitle("Wykres długości kolejki od czasu dla kolejki " + q.getQueueNumber());
+            myPlot.setXLabel("Czas");
+            myPlot.setYLabel("Dlugość");
+            myPlot.setMarksStyle("bigdots", 0);
+            myPlot.setMarksStyle("dots", 1);
+
+            for (StatisticQueue.LengthInTime lT : q.getLengthInTimeList()) {
+                myPlot.addPoint(0, lT.getTime(), lT.getLength(), true);
+            }
+
+            PlotApplication app = new PlotApplication(myPlot);
+            app.setSize(600, 600);
+            app.setLocation(100, 100);
+            app.setTitle("Wykres długości kolejki od czasu dla kolejki " + q.getQueueNumber());
+        }
+    }
+
+    private void printOnePlotQueuesLengthFromTime() {
+            Plot myPlot = new Plot();
+            myPlot.setTitle("Wykres długości kolejki od czasu dla wszystkich kolejek");
+            myPlot.setXLabel("Czas");
+            myPlot.setYLabel("Dlugość");
+            myPlot.setMarksStyle("bigdots", 0);
+            myPlot.setMarksStyle("dots", 1);
+            int dataSetColor = 0;
+            for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+                for (StatisticQueue.LengthInTime lT : q.getLengthInTimeList()) {
+                    myPlot.addPoint(dataSetColor, lT.getTime(), lT.getLength(), true);
+                }
+                dataSetColor++;
+            }
+            PlotApplication app = new PlotApplication(myPlot);
+            app.setSize(600, 600);
+            app.setLocation(100, 100);
+            app.setTitle("Wykres długości kolejki od czasu dla wszystkich kolejek");
+    }
+
+    private void printPlotAvgTimeWaitingInQueue() {
+        Plot myPlot = new Plot();
+        myPlot.setTitle("Sredni czas oczekiwania w kolejce");
+        myPlot.setXLabel("Nr kolejki");
+        myPlot.setYLabel("Sredni czas");
+        myPlot.setMarksStyle("bigdots", 0);
+        myPlot.setMarksStyle("dots", 1);
+        int dataSetColor = 0;
+        for (AvgTimeWaitingInQueue aT : queueListAvgTimeWaitingInQueueFinally) {
+            myPlot.addPoint(dataSetColor, aT.queueNumber, aT.avgTime, true);
+            dataSetColor++;
+        }
+        PlotApplication app = new PlotApplication(myPlot);
+        app.setSize(600, 600);
+        app.setLocation(100, 100);
+        app.setTitle("Wykres sredniego czasu oczekiwania w kolejce");
+    }
+
+    private class AvgTimeWaitingInQueue {
+        private long queueNumber = 0;
+        private double avgTime = 0;
+
+        public AvgTimeWaitingInQueue(long queueNumber, double avgTime) {
+            this.queueNumber = queueNumber;
+            this.avgTime = avgTime;
+        }
+
+        public long getQueueNumber() {
+            return queueNumber;
+        }
+
+        public double getAvgTime() {
+            return avgTime;
+        }
+    }
+
+    private class ClientHandlingByCashRegister {
+        private Double cashRegisterNumber = 0.0;
+        private Double clientHandlingNumber = 0.0;
+
+        public ClientHandlingByCashRegister(Double cashRegisterNumber, Double clientHandlingNumber) {
+            this.cashRegisterNumber = cashRegisterNumber;
+            this.clientHandlingNumber = clientHandlingNumber;
+        }
+
+        public Double getCashRegisterNumber() {
+            return cashRegisterNumber;
+        }
+
+        public Double getClientHandlingNumber() {
+            return clientHandlingNumber;
         }
     }
 }

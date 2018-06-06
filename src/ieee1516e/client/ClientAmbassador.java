@@ -2,6 +2,7 @@ package ieee1516e.client;
 
 import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
+import ieee1516e.cashRegister.CashRegisterExternalEvent;
 import ieee1516e.constants.ConfigConstants;
 import ieee1516e.tamplate.BaseAmbassador;
 
@@ -65,5 +66,51 @@ public class ClientAmbassador extends BaseAmbassador {
             return;
         }
         System.out.println("Pojawil sie nowy obiekt typu SimObject: " + objName + ".");
+    }
+
+    @Override
+    public void receiveInteraction( InteractionClassHandle interactionClass,
+                                    ParameterHandleValueMap theParameters,
+                                    byte[] tag,
+                                    OrderType sentOrdering,
+                                    TransportationTypeHandle theTransport,
+                                    SupplementalReceiveInfo receiveInfo )
+    {
+        this.receiveInteraction( interactionClass, theParameters, tag, sentOrdering, theTransport, null, sentOrdering, receiveInfo );
+    }
+
+    @Override
+    public void receiveInteraction( InteractionClassHandle interactionClass,
+                                    ParameterHandleValueMap theParameters,
+                                    byte[] tag,
+                                    OrderType sentOrdering,
+                                    TransportationTypeHandle theTransport,
+                                    LogicalTime timeReceived,
+                                    OrderType receivedOrdering,
+                                    SupplementalReceiveInfo receiveInfo )
+    {
+        String interactionName = "";
+
+        try {
+            interactionName = rtiAmbassador.getInteractionClassName(interactionClass);
+        } catch (RTIinternalError | FederateNotExecutionMember | NotConnected | InvalidInteractionClassHandle rtIinternalError) {
+            rtIinternalError.printStackTrace();
+        }
+
+        StringBuilder builder = new StringBuilder( "Interaction Received: " );
+        double time =  convertTime(timeReceived);
+
+        switch (interactionName) {
+            case ConfigConstants.END_SIMULATION_INTERACTION_NAME:
+                builder.append("END_SIMULATION" + ", time=").append(time);
+                builder.append( "\n" );
+                this.running = false;
+                break;
+
+            default:
+                builder.append("Undetected interaction.");
+        }
+
+        log( builder.toString() );
     }
 }

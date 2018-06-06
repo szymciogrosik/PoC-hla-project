@@ -18,4 +18,7 @@ sourceSets {
 dependencies {
     compile files('lib/portico.jar')
     compile files('lib/dissimlab.jar')
+    compile files('lib/plot.jar')
+    compile files('lib/plotapplet.jar')
+    compile files('lib/plotapplication.jar')
 }

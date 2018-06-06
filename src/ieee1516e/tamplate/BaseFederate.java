@@ -88,7 +88,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
     protected void tryCreateFederation() {
         try {
             URL[] modules = new URL[]{
-                    (new File("ShopFom.xml")).toURI().toURL()
+                    (new File(ConfigConstants.FEDERATION_FILE_PATH)).toURI().toURL()
             };
             rtiamb.createFederationExecution(ConfigConstants.FEDERATION_NAME, modules);
             log("Created Federation ");
@@ -103,31 +103,10 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         }
     }
 
-    protected double randomTime() {
-        Random r = new Random();
-        return 1 +(4 * r.nextDouble());
-    }
-
-    //Todo: nie wiadomo czy ok.
-    protected LogicalTime convertTime(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTime( time );
-    }
-
-    /**
-     * Same as for {@link #convertTime(double)}
-     */
-    protected LogicalTimeInterval convertInterval(double time )
-    {
-        // PORTICO SPECIFIC!!
-        return new DoubleTimeInterval( time );
-    }
-
     // Waiting for sync from RTI
     protected void advanceTime(double timestep) throws RTIexception
     {
-        log("requesting time advance for: " + (fedamb.federateTime + timestep));
+        log("Requesting time advance for: " + (fedamb.federateTime + timestep));
         // request the advance
         fedamb.isAdvancing = true;
         HLAfloat64Time newTime = timeFactory.makeTime( fedamb.federateTime + timestep );
@@ -157,20 +136,16 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         }
     }
 
-    public String getFederateName() {
-        return federateName;
-    }
-
-    public void setFederateName(String federateName) {
+    protected void setFederateName(String federateName) {
         this.federateName = federateName;
     }
 
-    private void resign() throws Exception {
+    protected void resign() throws Exception {
         rtiamb.resignFederationExecution(ResignAction.DELETE_OBJECTS);
         log("Resigned from Federation");
 
         try {
-            rtiamb.destroyFederationExecution("federation");
+            rtiamb.destroyFederationExecution(ConfigConstants.FEDERATION_NAME);
             log("Destroyed Federation");
         } catch (FederationExecutionDoesNotExist dne) {
             log("No need to destroy federation, it doesn't exist");

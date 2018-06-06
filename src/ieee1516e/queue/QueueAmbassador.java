@@ -40,8 +40,6 @@ public class QueueAmbassador extends BaseAmbassador {
             invalidInteractionClassHandle.printStackTrace();
         }
 
-        log("Nazwa interakcji" + interactionName );
-
         StringBuilder builder = new StringBuilder( "Interaction Received: " );
         double time =  convertTime(timeReceived);
 
@@ -56,6 +54,12 @@ public class QueueAmbassador extends BaseAmbassador {
                 externalEvents.add(new QueueExternalEvent(theParameters, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
                 builder.append(QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
                 builder.append( "\n" );
+                break;
+
+            case ConfigConstants.END_SIMULATION_INTERACTION_NAME:
+                builder.append("END_SIMULATION" + ", time=").append(time);
+                builder.append( "\n" );
+                this.running = false;
                 break;
 
             default:
