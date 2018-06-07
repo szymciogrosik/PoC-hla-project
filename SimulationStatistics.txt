@@ -1,16 +1,22 @@
 Statystyki dla symulacji Sklepu:
 
 Sredni czas przebywania klienta w kolejce:
-Dla kolejki nr: 0, wynosi: 24.0.
-Dla kolejki nr: 1, wynosi: 22.90909090909091.
-Dla kolejki nr: 2, wynosi: 21.677419354838708.
+Dla kolejki nr: 0, wynosi: 41.724137931034484.
+Dla kolejki nr: 1, wynosi: 37.6.
+Dla kolejki nr: 2, wynosi: 38.08.
+Dla kolejki nr: 3, wynosi: 37.0.
+Dla kolejki nr: 4, wynosi: 28.526315789473685.
 
 Srednia długość kolejki dla kasy: 
-Dla kasy nr: 0, wynosi: 3.7777777777777777.
-Dla kasy nr: 1, wynosi: 3.484848484848485.
-Dla kasy nr: 2, wynosi: 3.080808080808081.
+Dla kasy nr: 0, wynosi: 4.645161290322581.
+Dla kasy nr: 1, wynosi: 4.306451612903226.
+Dla kasy nr: 2, wynosi: 4.378640776699029.
+Dla kasy nr: 3, wynosi: 4.069767441860465.
+Dla kasy nr: 4, wynosi: 3.7611940298507465.
 
-Liczba obsłużonych klientów dla każdej z kas w przedziale czasu <50.0:150.0>wynosi:
-Dla kasy nr: 2.0, wynosi: 12.0.
-Dla kasy nr: 1.0, wynosi: 13.0.
-Dla kasy nr: 0.0, wynosi: 13.0.
+Liczba obsłużonych klientów dla każdej z kas w przedziale czasu <50.0:150.0> wynosi:
+Dla kasy nr: 1.0, wynosi: 11.0.
+Dla kasy nr: 0.0, wynosi: 9.0.
+Dla kasy nr: 2.0, wynosi: 9.0.
+Dla kasy nr: 3.0, wynosi: 6.0.
+Dla kasy nr: 4.0, wynosi: 3.0.

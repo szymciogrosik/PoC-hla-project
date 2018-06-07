@@ -8,8 +8,7 @@ import ieee1516e.tamplate.BaseAmbassador;
 import java.util.ArrayList;
 
 public class QueueAmbassador extends BaseAmbassador {
-    protected ArrayList<QueueExternalEvent> externalEvents = new ArrayList<>();
-    protected ArrayList<QueueExternalObject> externalObjects = new ArrayList<>();
+    protected ArrayList<QueueExternalEventAndObject> externalEventsAndObjects = new ArrayList<>();
 
     @Override
     public void receiveInteraction( InteractionClassHandle interactionClass,
@@ -45,14 +44,14 @@ public class QueueAmbassador extends BaseAmbassador {
 
         switch (interactionName) {
             case ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME:
-                externalEvents.add(new QueueExternalEvent(theParameters, QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
-                builder.append(QueueExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
+                externalEventsAndObjects.add(new QueueExternalEventAndObject(theParameters, QueueExternalEventAndObject.EventType.JOIN_CLIENT_TO_QUEUE , time));
+                builder.append(QueueExternalEventAndObject.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
                 builder.append( "\n" );
                 break;
 
             case ConfigConstants.OPEN_NEW_CASH_REGISTER_INTERACTION_NAME:
-                externalEvents.add(new QueueExternalEvent(theParameters, QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER , time));
-                builder.append(QueueExternalEvent.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
+                externalEventsAndObjects.add(new QueueExternalEventAndObject(theParameters, QueueExternalEventAndObject.EventType.OPEN_NEW_CASH_REGISTER , time));
+                builder.append(QueueExternalEventAndObject.EventType.OPEN_NEW_CASH_REGISTER + ", time=").append(time);
                 builder.append( "\n" );
                 break;
 
@@ -102,8 +101,8 @@ public class QueueAmbassador extends BaseAmbassador {
 
         switch (objectName) {
             case ConfigConstants.CASH_REGISTER_OBJ_NAME:
-                externalObjects.add(new QueueExternalObject(theAttributes, QueueExternalObject.ObjectType.CASH_REGISTER , time));
-                builder.append(QueueExternalObject.ObjectType.CASH_REGISTER + ", time=").append(time);
+                externalEventsAndObjects.add(new QueueExternalEventAndObject(theAttributes, QueueExternalEventAndObject.EventType.CASH_REGISTER , time));
+                builder.append(QueueExternalEventAndObject.EventType.CASH_REGISTER + ", time=").append(time);
                 builder.append("\n");
                 break;
 

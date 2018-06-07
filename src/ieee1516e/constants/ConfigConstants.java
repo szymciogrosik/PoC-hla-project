@@ -2,11 +2,11 @@ package ieee1516e.constants;
 
 public class ConfigConstants {
     // If SIMULATION_TIME == 0, simulation never end
-    public static final long SIMULATION_TIME                            = 200;
-    public static final int START_ALL_CASH_REGISTER_NUMBER              = 3;
-    public static final int MAX_CLIENTS_NUMBER_IN_QUEUES                = 10;
+    public static final long SIMULATION_TIME                            = 250;
+    public static final int START_ALL_CASH_REGISTER_NUMBER              = 2;
+    public static final int MAX_CLIENTS_NUMBER_IN_QUEUES                = 5;
     public static final double CASH_REGISTER_TIME_TO_SCAN_ONE_ARTICLE   = 1;
-    public static final int CLIENT_MAX_AMOUNT_OF_ARTICLES               = 5;
+    public static final int CLIENT_MAX_AMOUNT_OF_ARTICLES               = 10;
     public static final int CLIENT_MAX_TIME_TO_END_SHOPPING             = 2;
 
     public static final double STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE = 50;

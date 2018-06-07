@@ -62,13 +62,41 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
             double timeToAdvance = fedamb.federateTime + timeStep;
             advanceTime(timeStep);
 
-            if(fedamb.externalObjects.size() > 0) {
-                fedamb.externalObjects.sort(new QueueExternalObject.ExternalObjectComparator());
-                for(QueueExternalObject externalObject : fedamb.externalObjects) {
-                    switch (externalObject.getObjectType()) {
+            if(fedamb.externalEventsAndObjects.size() > 0) {
+                fedamb.externalEventsAndObjects.sort(new QueueExternalEventAndObject.ExternalEventComparator());
+                for(QueueExternalEventAndObject externalEvent : fedamb.externalEventsAndObjects) {
+                    switch (externalEvent.getEventType()) {
+                        case JOIN_CLIENT_TO_QUEUE:
+                            long clientNumberDecoded = decodeIntValue(externalEvent.getInteractionAttributes().get(this.clientNumberHandleJoinClientToQueue));
+                            long queueNumberDecoded = decodeIntValue(externalEvent.getInteractionAttributes().get(this.queueNumberHandleJoinClientToQueue));
+                            long articlesAmountDecoded = decodeIntValue(externalEvent.getInteractionAttributes().get(this.amountOfArticlesHandleJoinClientToQueue));
+                            log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
+                                    clientNumberDecoded +
+                                    ", Nr kolejki: " +
+                                    queueNumberDecoded +
+                                    ", Liczba artykulow: " +
+                                    articlesAmountDecoded
+                            );
+
+                            for (Queue q : queueList) {
+                                if(q.getNumberQueue() == queueNumberDecoded) {
+                                    q.addClientToQueue(new Client(clientNumberDecoded, articlesAmountDecoded));
+                                    break;
+                                }
+                            }
+                            break;
+                        case OPEN_NEW_CASH_REGISTER:
+                            //Todo: właściwie niepotrzebna bo kiedy otworzymy nową kasę kolejka i tak doda nową kolejkę
+                            log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
+                                    decodeIntValue(externalEvent.getInteractionAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
+                                    ", Nr kolejki: " +
+                                    decodeIntValue(externalEvent.getInteractionAttributes().get(this.queueNumberHandleOpenNewCashRegister))
+                            );
+                            break;
+
                         case CASH_REGISTER:
-                            long cashRegisterNumberDecoded = decodeIntValue(externalObject.getAttributes().get(this.cashRegisterNumberHandleCashRegister));
-                            boolean isFreeDecoded = decodeBooleanValue(externalObject.getAttributes().get(this.isFreeHandleCashRegister));
+                            long cashRegisterNumberDecoded = decodeIntValue(externalEvent.getObjectAttributes().get(this.cashRegisterNumberHandleCashRegister));
+                            boolean isFreeDecoded = decodeBooleanValue(externalEvent.getObjectAttributes().get(this.isFreeHandleCashRegister));
                             log("In case object: CASH_REGISTER | Nr kasy: " +
                                     cashRegisterNumberDecoded +
                                     ", Czy wolna: " +
@@ -90,54 +118,14 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                                 cashRegisterList.add(new CashRegister(cashRegisterNumberDecoded, isFreeDecoded));
                                 registerNewQueue(cashRegisterNumberDecoded);
                             }
-
-                            break;
-                        default:
-                            log("In case object: Undetected object.");
-                            break;
-                    }
-                }
-                fedamb.externalObjects.clear();
-            }
-
-            if(fedamb.externalEvents.size() > 0) {
-                fedamb.externalEvents.sort(new QueueExternalEvent.ExternalEventComparator());
-                for(QueueExternalEvent externalEvent : fedamb.externalEvents) {
-                    switch (externalEvent.getEventType()) {
-                        case JOIN_CLIENT_TO_QUEUE:
-                            long clientNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.clientNumberHandleJoinClientToQueue));
-                            long queueNumberDecoded = decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleJoinClientToQueue));
-                            long articlesAmountDecoded = decodeIntValue(externalEvent.getAttributes().get(this.amountOfArticlesHandleJoinClientToQueue));
-                            log("In case interaction: JOIN_CLIENT_TO_QUEUE | Nr klienta: " +
-                                    clientNumberDecoded +
-                                    ", Nr kolejki: " +
-                                    queueNumberDecoded +
-                                    ", Liczba artykulow: " +
-                                    articlesAmountDecoded
-                            );
-
-                            for (Queue q : queueList) {
-                                if(q.getNumberQueue() == queueNumberDecoded) {
-                                    q.addClientToQueue(new Client(clientNumberDecoded, articlesAmountDecoded));
-                                    break;
-                                }
-                            }
-                            break;
-                        case OPEN_NEW_CASH_REGISTER:
-                            //Todo: właściwie niepotrzebna bo kiedy otworzymy nową kasę kolejka i tak doda nową kolejkę
-                            log("In case interaction: OPEN_NEW_CASH_REGISTER | Nr kasy: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.cashRegisterNumberHandleOpenNewCashRegister)) +
-                                    ", Nr kolejki: " +
-                                    decodeIntValue(externalEvent.getAttributes().get(this.queueNumberHandleOpenNewCashRegister))
-                            );
                             break;
 
                         default:
-                            log("In case interaction: Undetected interaction.");
+                            log("In case interaction and object: Undetected.");
                             break;
                     }
                 }
-                fedamb.externalEvents.clear();
+                fedamb.externalEventsAndObjects.clear();
             }
 
             //Send interaction startHandlingClients

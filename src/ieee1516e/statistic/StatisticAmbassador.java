@@ -8,8 +8,7 @@ import ieee1516e.tamplate.BaseAmbassador;
 import java.util.ArrayList;
 
 public class StatisticAmbassador extends BaseAmbassador {
-    protected ArrayList<StatisticExternalEvent> externalEvents = new ArrayList<>();
-    protected ArrayList<StatisticExternalObject> externalObjects = new ArrayList<>();
+    protected ArrayList<StatisticExternalEventAndObject> externalEventsAndObjects = new ArrayList<>();
 
     @Override
     public void receiveInteraction( InteractionClassHandle interactionClass,
@@ -45,14 +44,14 @@ public class StatisticAmbassador extends BaseAmbassador {
 
         switch (interactionName) {
             case ConfigConstants.JOIN_CLIENT_TO_QUEUE_INTERACTION_NAME:
-                externalEvents.add(new StatisticExternalEvent(theParameters, StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE , time));
-                builder.append(StatisticExternalEvent.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
+                externalEventsAndObjects.add(new StatisticExternalEventAndObject(theParameters, StatisticExternalEventAndObject.EventType.JOIN_CLIENT_TO_QUEUE , time));
+                builder.append(StatisticExternalEventAndObject.EventType.JOIN_CLIENT_TO_QUEUE + ", time=").append(time);
                 builder.append("\n");
                 break;
 
             case ConfigConstants.START_HANDLING_CLIENT_INTERACTION_NAME:
-                externalEvents.add(new StatisticExternalEvent(theParameters, StatisticExternalEvent.EventType.START_HANDLING_CLIENT , time));
-                builder.append(StatisticExternalEvent.EventType.START_HANDLING_CLIENT + ", time=").append(time);
+                externalEventsAndObjects.add(new StatisticExternalEventAndObject(theParameters, StatisticExternalEventAndObject.EventType.START_HANDLING_CLIENT , time));
+                builder.append(StatisticExternalEventAndObject.EventType.START_HANDLING_CLIENT + ", time=").append(time);
                 builder.append("\n");
                 break;
 
@@ -96,14 +95,14 @@ public class StatisticAmbassador extends BaseAmbassador {
 
         switch (objectName) {
             case ConfigConstants.QUEUE_OBJ_NAME:
-                    externalObjects.add(new StatisticExternalObject(theAttributes, StatisticExternalObject.ObjectType.QUEUE , time));
-                    builder.append(StatisticExternalObject.ObjectType.QUEUE + ", time=").append(time);
-                    builder.append( "\n" );
+                externalEventsAndObjects.add(new StatisticExternalEventAndObject(theAttributes, StatisticExternalEventAndObject.EventType.QUEUE , time));
+                builder.append(StatisticExternalEventAndObject.EventType.QUEUE + ", time=").append(time);
+                builder.append( "\n" );
                 break;
 
             case ConfigConstants.CASH_REGISTER_OBJ_NAME:
-                externalObjects.add(new StatisticExternalObject(theAttributes, StatisticExternalObject.ObjectType.CASH_REGISTER , time));
-                builder.append(StatisticExternalObject.ObjectType.CASH_REGISTER + ", time=").append(time);
+                externalEventsAndObjects.add(new StatisticExternalEventAndObject(theAttributes, StatisticExternalEventAndObject.EventType.CASH_REGISTER , time));
+                builder.append(StatisticExternalEventAndObject.EventType.CASH_REGISTER + ", time=").append(time);
                 builder.append("\n");
                 break;
 
