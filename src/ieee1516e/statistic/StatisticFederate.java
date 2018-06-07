@@ -248,7 +248,7 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
         //Statistic avg time waiting client in queue.
         writer.writeToExistingFile("Sredni czas przebywania klienta w kolejce:");
         for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
-            double avgWaitingInQueue;
+            double avgWaitingInQueue = 0;
             double waitingInQueueTime = 0;
             double clientsNumber = 0;
             System.out.println("Dla kolejki: "+q.getQueueNumber());
@@ -259,7 +259,8 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
                 clientsNumber++;
                 System.out.println("Nr klienta: " + c.getClientNumber() + ", Join: " + c.getJoinToQueue() + ", Exit: " + c.getExitQueue());
             }
-            avgWaitingInQueue = waitingInQueueTime/clientsNumber;
+            if(clientsNumber != 0)
+                avgWaitingInQueue = waitingInQueueTime/clientsNumber;
             System.out.println("Srednia długość oczekiwania dla kolejki: " + avgWaitingInQueue);
             queueListAvgTimeWaitingInQueueFinally.add(new AvgTimeWaitingInQueue(q.getQueueNumber(), avgWaitingInQueue));
             writer.writeToExistingFile("Dla kolejki nr: "+q.getQueueNumber() +", wynosi: "+avgWaitingInQueue+".");
@@ -284,7 +285,7 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             System.out.println("Dla kasy: " + cR.getCashRegisterNumber() + ", obsłużono: "+cR.getHandlingClientsCounter()+", w przedziale czasu od: "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_START_TIME_VALUE+" do "+ConfigConstants.STATISTIC_MAX_CLIENTS_HANDLING_NUMBER_END_TIME_VALUE);
             clientHandlingByCashRegisterList.add(new ClientHandlingByCashRegister(cR.getCashRegisterNumber() + 0.0, cR.getHandlingClientsCounter()));
         }
-        Collections.sort(clientHandlingByCashRegisterList,(a, b)->a.clientHandlingNumber.compareTo(b.cashRegisterNumber));
+        Collections.sort(clientHandlingByCashRegisterList, Comparator.comparing(a -> a.clientHandlingNumber));
         for (ClientHandlingByCashRegister cH : clientHandlingByCashRegisterList) {
             writer.writeToExistingFile("Dla kasy nr: "+cH.getCashRegisterNumber() + ", wynosi: "+cH.getClientHandlingNumber()+".");
         }
@@ -293,7 +294,7 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
         //------------------------------------------------------------------------------------------
         //Queue length in time
         //Plot
-        printPlotsQueueLengthFromTime();
+//        printPlotsQueueLengthFromTime();
         printOnePlotQueuesLengthFromTime();
         //------------------------------------------------------------------------------------------
 
@@ -369,11 +370,11 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             myPlot.setXLabel("Czas");
             myPlot.setYLabel("Dlugość");
             myPlot.setMarksStyle("bigdots", 0);
-            myPlot.setMarksStyle("dots", 1);
 
             for (StatisticQueue.LengthInTime lT : q.getLengthInTimeList()) {
                 myPlot.addPoint(0, lT.getTime(), lT.getLength(), true);
             }
+            myPlot.addLegend(0, "Kolejka "+q.getQueueNumber());
 
             PlotApplication app = new PlotApplication(myPlot);
             app.setSize(600, 600);
@@ -387,13 +388,13 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             myPlot.setTitle("Wykres długości kolejki od czasu dla wszystkich kolejek");
             myPlot.setXLabel("Czas");
             myPlot.setYLabel("Dlugość");
-            myPlot.setMarksStyle("bigdots", 0);
-            myPlot.setMarksStyle("dots", 1);
             int dataSetColor = 0;
             for (StatisticQueue q : queueListAvgTimeWaitingInQueueTemp) {
+                myPlot.setMarksStyle("dots", dataSetColor);
                 for (StatisticQueue.LengthInTime lT : q.getLengthInTimeList()) {
                     myPlot.addPoint(dataSetColor, lT.getTime(), lT.getLength(), true);
                 }
+                myPlot.addLegend(dataSetColor, "Kolejka nr "+q.getQueueNumber());
                 dataSetColor++;
             }
             PlotApplication app = new PlotApplication(myPlot);
@@ -407,11 +408,11 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
         myPlot.setTitle("Sredni czas oczekiwania w kolejce");
         myPlot.setXLabel("Nr kolejki");
         myPlot.setYLabel("Sredni czas");
-        myPlot.setMarksStyle("bigdots", 0);
-        myPlot.setMarksStyle("dots", 1);
         int dataSetColor = 0;
         for (AvgTimeWaitingInQueue aT : queueListAvgTimeWaitingInQueueFinally) {
-            myPlot.addPoint(dataSetColor, aT.queueNumber, aT.avgTime, true);
+            myPlot.setMarksStyle("dots", dataSetColor);
+            myPlot.addPoint(dataSetColor, aT.queueNumber, aT.avgTime, false);
+            myPlot.addLegend(dataSetColor, "Kolejka nr " + aT.queueNumber);
             dataSetColor++;
         }
         PlotApplication app = new PlotApplication(myPlot);
@@ -427,14 +428,6 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
         public AvgTimeWaitingInQueue(long queueNumber, double avgTime) {
             this.queueNumber = queueNumber;
             this.avgTime = avgTime;
-        }
-
-        public long getQueueNumber() {
-            return queueNumber;
-        }
-
-        public double getAvgTime() {
-            return avgTime;
         }
     }
 

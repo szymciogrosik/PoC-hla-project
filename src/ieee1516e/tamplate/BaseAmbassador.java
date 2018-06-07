@@ -19,6 +19,7 @@ public abstract class BaseAmbassador extends NullFederateAmbassador {
 
     public boolean running 			    = true;
 
+    @Override
     public void timeAdvanceGrant( LogicalTime theTime )
     {
         this.grantedTime = convertTime( theTime );

@@ -44,8 +44,6 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
     private AttributeHandle cashRegisterNumberHandleCashRegister;
     private AttributeHandle isFreeHandleCashRegister;
 
-    private long queueStartNr                     = 0;
-    private long cashRegisterStartNr              = 0;
     private long queueLengthStartNr               = 0;
 
     private ArrayList<Queue> queueList = new ArrayList<>();

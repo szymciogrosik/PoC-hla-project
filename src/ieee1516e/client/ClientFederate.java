@@ -34,7 +34,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
     private long clientNumber = 0;
 
     private Random generator = new Random();
-    private double randomTimeToSendClient = generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_SPOWN);
+    private double randomTimeToSendClient = generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_END_SHOPPING);
 
     private void runFederate() throws RTIexception, IllegalAccessException, InstantiationException, ClassNotFoundException {
         this.setFederateName(ConfigConstants.CLIENT_FED);
@@ -77,7 +77,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
             if(fedamb.federateTime >= randomTimeToSendClient) {
                 sendInteractionJoinToQueue();
-                randomTimeToSendClient = fedamb.federateTime + generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_SPOWN);
+                randomTimeToSendClient = fedamb.federateTime + generator.nextInt(ConfigConstants.CLIENT_MAX_TIME_TO_END_SHOPPING);
             }
 
             if(fedamb.grantedTime == timeToAdvance) {

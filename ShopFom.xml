@@ -109,14 +109,6 @@
                 dimensions="NA"
                 transportation="HLAreliable"
                 order="Receive">
-            <!--<interactionClass-->
-                    <!--name="koniecSymulacji"-->
-                    <!--sharing="PublishSubscribe"-->
-                    <!--dimensions="NA"-->
-                    <!--transportation="HLAreliable"-->
-                    <!--order="Receive"-->
-                    <!--semantics="NA">-->
-            <!--</interactionClass>-->
             <interactionClass
                     name="Dolaczenie_klienta_do_kolejki"
                     sharing="PublishSubscribe"

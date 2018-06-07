@@ -70,7 +70,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         System.out.println( federateName + "   : " + message );
     }
 
-    protected void waitForUser()
+    private void waitForUser()
     {
         log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
@@ -85,7 +85,7 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         }
     }
 
-    protected void tryCreateFederation() {
+    private void tryCreateFederation() {
         try {
             URL[] modules = new URL[]{
                     (new File(ConfigConstants.FEDERATION_FILE_PATH)).toURI().toURL()
@@ -97,7 +97,6 @@ public abstract class BaseFederate<T extends BaseAmbassador> {
         } catch (MalformedURLException urle) {
             log("Exception loading one of the FOM modules from disk: " + urle.getMessage());
             urle.printStackTrace();
-            return;
         } catch (NotConnected | CouldNotOpenFDD | RTIinternalError | ErrorReadingFDD | InconsistentFDD notConnected) {
             notConnected.printStackTrace();
         }
