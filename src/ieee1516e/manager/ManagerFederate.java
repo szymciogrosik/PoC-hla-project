@@ -46,7 +46,7 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeStep);
+            advanceTime(timeToAdvance);
 
             if(fedamb.externalObjects.size() > 0) {
                 fedamb.externalObjects.sort(new ManagerExternalObject.ExternalObjectComparator());
@@ -114,8 +114,6 @@ public class ManagerFederate extends BaseFederate<ManagerAmbassador> {
                 log("Updating manager time: " + timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
-
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
 
         try {

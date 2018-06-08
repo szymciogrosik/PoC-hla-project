@@ -60,7 +60,7 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeStep);
+            advanceTime(timeToAdvance);
 
             if(fedamb.externalEventsAndObjects.size() > 0) {
                 fedamb.externalEventsAndObjects.sort(new StatisticExternalEventAndObject.ExternalEventComparator());
@@ -221,8 +221,6 @@ public class StatisticFederate extends BaseFederate<StatisticAmbassador> {
             if(ConfigConstants.SIMULATION_TIME < fedamb.federateTime && ConfigConstants.SIMULATION_TIME != 0) {
                 sendInteractionEndSimulation();
             }
-
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
 
         try {

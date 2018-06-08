@@ -47,7 +47,7 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeStep);
+            advanceTime(timeToAdvance);
 
             if(fedamb.externalObjects.size() > 0) {
                 fedamb.externalObjects.sort(new ClientExternalObject.ExternalObjectComparator());
@@ -85,8 +85,6 @@ public class ClientFederate extends BaseFederate<ClientAmbassador> {
                 log("Updating client time: " + timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
-
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
 
         try {

@@ -60,7 +60,7 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
 
         while (fedamb.running) {
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeStep);
+            advanceTime(timeToAdvance);
 
             if(fedamb.externalEventsAndObjects.size() > 0) {
                 fedamb.externalEventsAndObjects.sort(new QueueExternalEventAndObject.ExternalEventComparator());
@@ -137,8 +137,6 @@ public class QueueFederate extends BaseFederate<QueueAmbassador> {
                 updateHLAObjects(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
-
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
 
         try {

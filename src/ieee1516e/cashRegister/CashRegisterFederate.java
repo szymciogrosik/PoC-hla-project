@@ -69,7 +69,7 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
             }
 
             double timeToAdvance = fedamb.federateTime + timeStep;
-            advanceTime(timeStep);
+            advanceTime(timeToAdvance);
 
             if(fedamb.externalEvents.size() > 0) {
                 fedamb.externalEvents.sort(new CashRegisterExternalEvent.ExternalEventComparator());
@@ -122,8 +122,6 @@ public class CashRegisterFederate extends BaseFederate<CashRegisterAmbassador> {
                 updateHLAObjects(timeToAdvance);
                 fedamb.federateTime = timeToAdvance;
             }
-
-            rtiamb.evokeMultipleCallbacks(0.1, 0.2);
         }
 
         try {
